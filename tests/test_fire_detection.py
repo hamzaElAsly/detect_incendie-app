@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from datetime import datetime, timedelta
+from typing import Optional
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -49,6 +50,32 @@ class DetectionGateTests(unittest.TestCase):
         self.assertFalse(gate.observe(False, 0.99))
         self.assertFalse(gate.observe(True, 0.9))
 
+class DetectionGate:
+    def __init__( self,threshold: float,required_positive_frames: int,cooldown_seconds: int, ):
+        self.threshold = threshold
+        self.required_positive_frames = required_positive_frames
+        self.cooldown_seconds = cooldown_seconds
+        self.positive_frames = 0
+        self.last_detection_at: Optional[datetime] = None
+
+    def observe( self, is_fire: bool, confidence: float, now: Optional[datetime] = None, ) -> bool:
+        now = now or datetime.now()
+        # Une frame négative ou insuffisante remet la séquence à zéro
+        if not is_fire or confidence < self.threshold:
+            self.positive_frames = 0
+            return False
+        # Pendant le cooldown, ne pas accumuler les frames positives
+        if self.last_detection_at is not None:
+            elapsed = (now - self.last_detection_at).total_seconds()
+            if elapsed < self.cooldown_seconds:
+                self.positive_frames = 0
+                return False
+        self.positive_frames += 1
+        if self.positive_frames < self.required_positive_frames:
+            return False
+        self.last_detection_at = now
+        self.positive_frames = 0
+        return True
 
 class CaptureAndModelTests(unittest.TestCase):
     def test_save_capture(self):
