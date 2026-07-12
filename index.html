@@ -889,7 +889,9 @@
     </div>
 
     <script>
-        const API_URL = 'https://detect-incendie-app.onrender.com';
+        const API_URL = ['localhost', '127.0.0.1', ''].includes(window.location.hostname)
+            ? 'http://127.0.0.1:8000'
+            : 'https://detect-incendie-app.onrender.com';
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const resultSection = document.getElementById('resultSection');
@@ -998,7 +1000,11 @@
         }
 
         function displayResults(data) {
-            const { prediction, probabilities } = data;
+            const prediction = data;
+            const probabilities = {
+                fire: prediction.prediction === 'Fire' ? prediction.confidence : 1 - prediction.confidence,
+                no_fire: prediction.prediction === 'No Fire' ? prediction.confidence : 1 - prediction.confidence
+            };
             
             resultsPlaceholder.style.display = 'none';
             resultSection.style.display = 'block';
@@ -1038,7 +1044,7 @@
 
             const alertMessage = document.getElementById('alertMessage');
             let alertClass = prediction.status === 'fire_detected' ? 'alert-danger' : 
-                            prediction.status === 'uncertain' ? 'alert-warning' : 'alert-success';
+                            prediction.status === 'risk' ? 'alert-warning' : 'alert-success';
             let alertIcon = prediction.status === 'fire_detected' ? '🚨' : 
                            prediction.status === 'uncertain' ? '⚠️' : '✓';
 
@@ -1054,14 +1060,14 @@
             analysisCount++;
             document.getElementById('totalAnalyses').textContent = analysisCount;
             
-            if (data.prediction.status === 'fire_detected') {
+            if (data.status === 'fire_detected') {
                 fireDetections++;
                 document.getElementById('detectedFires').textContent = fireDetections;
             }
         }
 
         function simulateMonitoring(data) {
-            if (data.prediction.status === 'fire_detected') {
+            if (data.status === 'fire_detected') {
                 document.getElementById('tempMonitor').textContent = '45°C';
                 document.getElementById('smokeMonitor').textContent = '78%';
                 document.getElementById('riskMonitor').textContent = 'Élevé';
@@ -1078,8 +1084,8 @@
             const historyItem = {
                 timestamp: new Date().toLocaleString('fr-FR'),
                 filename: file.name,
-                result: data.prediction.status,
-                confidence: (data.prediction.confidence * 100).toFixed(1)
+                result: data.status,
+                confidence: (data.confidence * 100).toFixed(1)
             };
             
             analysisHistory.unshift(historyItem);
