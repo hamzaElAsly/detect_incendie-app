@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "checkpoint": "fire_cnn_bottleneck.pth",
+  "classes": ["fire", "no_fire"],
+  "class_to_idx": {
+    "fire": 0,
+    "no_fire": 1
+  },
+  "dataset_classes": ["Fire", "No_Fire"],
+  "image_size": 224,
+  "normalization": {
+    "mean": [0.485, 0.456, 0.406],
+    "std": [0.229, 0.224, 0.225]
+  },
+  "architecture": {
+    "name": "CNN_Bottleneck",
+    "bottleneck_dim": 64,
+    "num_outputs": 2
+  }
+}
