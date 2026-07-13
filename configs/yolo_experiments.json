@@ -1,0 +1,27 @@
+{
+  "seed": 20260713,
+  "data": "fire_factory_dataset/data.yaml",
+  "models": [
+    {"name": "small", "weights": "yolo11s.pt"},
+    {"name": "medium", "weights": "yolo11m.pt"},
+    {"name": "large", "weights": "yolo11l.pt"}
+  ],
+  "training": {
+    "epochs": 100,
+    "imgsz": 640,
+    "batch": 16,
+    "patience": 20,
+    "device": "auto",
+    "workers": 4,
+    "pretrained": true,
+    "deterministic": true,
+    "project": "runs/fire_factory"
+  },
+  "selection": {
+    "primary_metric": "map50_95",
+    "required_factory_test": true,
+    "report_precision_recall_per_class": true,
+    "report_false_alarms_per_hour": true
+  },
+  "exports": ["onnx", "torchscript"]
+}

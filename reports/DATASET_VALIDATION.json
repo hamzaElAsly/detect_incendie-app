@@ -1,0 +1,56 @@
+{
+  "valid": false,
+  "seed": 20260713,
+  "classes": {
+    "0": "fire",
+    "1": "smoke"
+  },
+  "counts": {
+    "train": {
+      "images": 16370,
+      "labels": 16370,
+      "positive": 13745,
+      "negative": 2575,
+      "boxes": {
+        "1": 17161,
+        "0": 10295
+      },
+      "invalid": 268
+    },
+    "val": {
+      "images": 4198,
+      "labels": 4198,
+      "positive": 3447,
+      "negative": 744,
+      "boxes": {
+        "1": 4979,
+        "0": 2933
+      },
+      "invalid": 63
+    },
+    "test": {
+      "images": 0,
+      "labels": 0,
+      "positive": 0,
+      "negative": 0,
+      "boxes": {},
+      "invalid": 0
+    }
+  },
+  "errors": [
+    "data.yaml doit déclarer explicitement 0: fire et 1: smoke",
+    "data.yaml contient un chemin Kaggle non portable",
+    "train: 2 image(s) sans label",
+    "train: 2 label(s) sans image",
+    "train: 268 annotation(s) invalide(s)",
+    "val: 1 image(s) sans label",
+    "val: 1 label(s) sans image",
+    "val: 63 annotation(s) invalide(s)",
+    "split test vide",
+    "sources.csv contient 0 lignes pour 20568 assets",
+    "split_manifest.csv contient 0 lignes pour 20568 assets"
+  ],
+  "warnings": [
+    "aucun hard negative explicitement documenté"
+  ]
+}
