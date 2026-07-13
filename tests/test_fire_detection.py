@@ -1,7 +1,6 @@
 import tempfile
 import unittest
 from datetime import datetime, timedelta
-from typing import Optional
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -12,6 +11,7 @@ from sqlalchemy.orm import Session
 from database import Base
 from repositories.fire_event_repository import FireEventRepository
 from services.detection_gate import DetectionGate
+from services.image_preprocessing import load_model_metadata, opencv_frame_to_pil
 
 
 class RepositoryTests(unittest.TestCase):
@@ -50,33 +50,6 @@ class DetectionGateTests(unittest.TestCase):
         self.assertFalse(gate.observe(False, 0.99))
         self.assertFalse(gate.observe(True, 0.9))
 
-class DetectionGate:
-    def __init__( self,threshold: float,required_positive_frames: int,cooldown_seconds: int, ):
-        self.threshold = threshold
-        self.required_positive_frames = required_positive_frames
-        self.cooldown_seconds = cooldown_seconds
-        self.positive_frames = 0
-        self.last_detection_at: Optional[datetime] = None
-
-    def observe( self, is_fire: bool, confidence: float, now: Optional[datetime] = None, ) -> bool:
-        now = now or datetime.now()
-        # Une frame négative ou insuffisante remet la séquence à zéro
-        if not is_fire or confidence < self.threshold:
-            self.positive_frames = 0
-            return False
-        # Pendant le cooldown, ne pas accumuler les frames positives
-        if self.last_detection_at is not None:
-            elapsed = (now - self.last_detection_at).total_seconds()
-            if elapsed < self.cooldown_seconds:
-                self.positive_frames = 0
-                return False
-        self.positive_frames += 1
-        if self.positive_frames < self.required_positive_frames:
-            return False
-        self.last_detection_at = now
-        self.positive_frames = 0
-        return True
-
 class CaptureAndModelTests(unittest.TestCase):
     def test_save_capture(self):
         import services.capture_service as captures
@@ -94,6 +67,94 @@ class CaptureAndModelTests(unittest.TestCase):
         result = get_fire_detection_service().predict_pil(image)
         self.assertIn(result["label"], {"fire", "no_fire"})
         self.assertGreaterEqual(result["confidence"], 0.5)
+
+
+class PredictionPipelineTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from services.fire_detection_service import get_fire_detection_service
+        cls.service = get_fire_detection_service()
+        cls.root = Path(__file__).resolve().parents[1]
+
+    def test_real_imagefolder_class_order_matches_metadata(self):
+        from torchvision.datasets import ImageFolder
+        dataset = ImageFolder(self.root / "data_set")
+        metadata = load_model_metadata()
+        self.assertEqual(dataset.classes, metadata["dataset_classes"])
+        self.assertEqual(dataset.class_to_idx, {"Fire": 0, "No_Fire": 1})
+        self.assertEqual(metadata["classes"], ["fire", "no_fire"])
+
+    def test_checkpoint_loaded_strictly_with_two_outputs(self):
+        self.assertEqual(self.service.model.classifier.out_features, 2)
+        self.assertEqual(self.service.model.classifier.in_features, 64)
+        self.assertFalse(self.service.model.training)
+
+    def test_preprocessing_shape_and_finite_values(self):
+        from PIL import Image
+        import torch
+        tensor = self.service.transform(Image.new("RGB", (640, 480), (10, 20, 30)))
+        self.assertEqual(tuple(tensor.shape), (3, 224, 224))
+        self.assertTrue(torch.isfinite(tensor).all())
+
+    def test_opencv_bgr_to_rgb(self):
+        import cv2
+        rgb = np.array([[[255, 10, 20], [1, 200, 30]]], dtype=np.uint8)
+        bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+        np.testing.assert_array_equal(np.asarray(opencv_frame_to_pil(bgr)), rgb)
+
+    def test_pil_and_webcam_paths_are_identical(self):
+        import cv2
+        from PIL import Image
+        image = Image.open(self.root / "Safe_Fire (3).png").convert("RGB")
+        frame = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
+        self.assertEqual(self.service.predict_pil(image), self.service.predict_frame(frame))
+
+    def test_softmax_probabilities_and_mapping(self):
+        from PIL import Image
+        result = self.service.predict_pil(Image.open(self.root / "Safe_Fire (3).png"))
+        self.assertAlmostEqual(sum(result["probabilities"].values()), 1.0, places=6)
+        self.assertEqual(result["label"], self.service.classes[result["predicted_index"]])
+        self.assertEqual(result["is_fire"], result["label"] == "fire")
+
+    def test_known_normal_and_fire_examples(self):
+        from PIL import Image
+        normal = self.service.predict_pil(Image.open(self.root / "Safe_Fire (3).png"))
+        fire = self.service.predict_pil(Image.open(self.root / "test_feu.jpg"))
+        self.assertEqual(normal["label"], "no_fire")
+        self.assertEqual(fire["label"], "fire")
+
+    def test_model_singleton(self):
+        from services.fire_detection_service import get_fire_detection_service
+        self.assertIs(get_fire_detection_service(), get_fire_detection_service())
+
+    def test_interfaces_reference_central_service(self):
+        for filename in ("app.py", "api.py"):
+            source = (self.root / filename).read_text(encoding="utf-8")
+            self.assertIn("get_fire_detection_service", source)
+            self.assertNotIn("CNN_Bottleneck(", source)
+
+
+class EventDecisionTests(unittest.TestCase):
+    def setUp(self):
+        self.engine = create_engine("sqlite+pysqlite:///:memory:")
+        Base.metadata.create_all(self.engine)
+        self.session = Session(self.engine)
+        self.repo = FireEventRepository(self.session)
+
+    def tearDown(self):
+        self.session.close(); self.engine.dispose()
+
+    def test_normal_does_not_create_event(self):
+        gate = DetectionGate(0.95, 3, 15)
+        for _ in range(5): self.assertFalse(gate.observe(False, 0.999))
+        self.assertEqual(self.repo.list(), [])
+
+    def test_confirmed_fire_can_create_event(self):
+        gate = DetectionGate(0.95, 3, 15)
+        self.assertFalse(gate.observe(True, 0.99)); self.assertFalse(gate.observe(True, 0.99))
+        if gate.observe(True, 0.99):
+            self.repo.create("storage/detections/confirmed.jpg", 0.99, "webcam")
+        self.assertEqual(len(self.repo.list()), 1)
 
 
 class DatabaseConnectionTests(unittest.TestCase):

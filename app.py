@@ -68,10 +68,10 @@ def release_camera() -> None:
 def webcam_page() -> None:
     st.header("Détection en temps réel")
     connected = database_status()
-    st.caption(f"Seuil {settings.fire_confidence_threshold:.0%} · {settings.required_positive_frames} frames positives · cooldown {settings.detection_cooldown_seconds}s")
+    st.caption(f"Seuil événement {settings.fire_event_threshold:.0%} · {settings.required_positive_frames} frames positives · cooldown {settings.detection_cooldown_seconds}s")
     st.session_state.setdefault("camera_active", False); st.session_state.setdefault("session_events", 0)
     if "gate" not in st.session_state:
-        st.session_state.gate = DetectionGate(settings.fire_confidence_threshold,
+        st.session_state.gate = DetectionGate(settings.fire_event_threshold,
                                                settings.required_positive_frames,
                                                settings.detection_cooldown_seconds)
     start_col, stop_col, metric_col = st.columns(3)
@@ -92,15 +92,19 @@ def webcam_page() -> None:
     if not ok:
         st.error("La webcam ne fournit plus d'image."); logger.error("Erreur de lecture webcam"); release_camera(); return
     try:
-        result = detection_service().predict_frame(frame)
+        raw_frame = frame.copy()
+        result = detection_service().predict_frame(raw_frame)
         confirmed = st.session_state.gate.observe(result["is_fire"], result["confidence"])
         color = (0, 0, 255) if result["is_fire"] else (0, 180, 0)
         text = f"{result['label']} {result['confidence']:.1%}"
         cv2.putText(frame, text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
         frame_slot.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB", width="stretch")
-        result_slot.error(text) if result["is_fire"] else result_slot.success(text)
+        if result["is_fire"]:
+            result_slot.error(text)
+        else:
+            result_slot.success(text)
         if confirmed:
-            relative_path = save_capture(frame)
+            relative_path = save_capture(raw_frame)
             logger.warning("Incendie confirmé: confiance %.4f", result["confidence"])
             if connected:
                 try:
@@ -114,7 +118,10 @@ def webcam_page() -> None:
                 logger.error("Détection locale non enregistrée en base: MySQL indisponible")
                 st.error("Capture sauvegardée localement; événement non enregistré car MySQL est indisponible.")
     except Exception as exc:
-        logger.exception("Erreur durant l'inférence webcam"); st.error(f"Erreur webcam: {exc}"); release_camera(); return
+        logger.exception("Erreur durant l'inférence webcam")
+        st.error(f"Erreur webcam: {exc}")
+        release_camera()
+        return
     time.sleep(0.05); st.rerun()
 
 

@@ -101,6 +101,7 @@ async def predict(image: UploadFile = File(...)):
     buffered = io.BytesIO(); pil_image.save(buffered, format="PNG")
     return {"success": True, "prediction": "Fire" if result["is_fire"] else "No Fire",
             "confidence": round(result["confidence"], 4), "status": status, "message": message,
+            "predicted_index": result["predicted_index"], "probabilities": result["probabilities"],
             "image": "data:image/png;base64," + base64.b64encode(buffered.getvalue()).decode()}
 
 

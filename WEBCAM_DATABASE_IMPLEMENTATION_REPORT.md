@@ -30,7 +30,7 @@ Chaque frame BGR OpenCV est convertie en RGB/PIL, redimensionnée en 224×224 et
 
 ## 8. Seuil utilisé
 
-`FIRE_CONFIDENCE_THRESHOLD=0.80`, configurable dans `.env`. Le seuil historique de forte certitude de `/predict` reste 0,85 afin de préserver son contrat existant; le seuil d'incertitude visuel de l'upload reste 0,60.
+`FIRE_CONFIDENCE_THRESHOLD=0.95`, configurable dans `.env`. Le seuil historique de forte certitude de `/predict` reste 0,85 afin de préserver son contrat existant; le seuil d'incertitude visuel de l'upload reste 0,60.
 
 ## 9. Cooldown utilisé
 

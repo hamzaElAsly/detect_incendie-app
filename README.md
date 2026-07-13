@@ -33,9 +33,11 @@ DB_PORT=3306
 DB_NAME=fire_detection
 DB_USER=root
 DB_PASSWORD=votre_mot_de_passe
-FIRE_CONFIDENCE_THRESHOLD=0.80
+FIRE_CONFIDENCE_THRESHOLD=0.95
+FIRE_EVENT_THRESHOLD=0.95
 DETECTION_COOLDOWN_SECONDS=15
 REQUIRED_POSITIVE_FRAMES=3
+PREDICTION_DEBUG=false
 ```
 
 `.env` est ignoré par Git. Le mot de passe n'est jamais écrit dans les logs. SQLAlchemy crée aussi la table au démarrage si la base existe et si le compte possède les droits nécessaires.
@@ -59,7 +61,11 @@ Routes : `GET /health`, `POST /predict`, `GET /events`, `GET /events/{id}`, `PAT
 
 ## Logique webcam
 
-Une frame est positive lorsque le modèle prédit `Fire` avec une confiance d'au moins 0,80. Trois frames positives consécutives sont requises. Une fois un événement créé, le cooldown de 15 secondes interdit un nouvel enregistrement; la séquence doit ensuite être confirmée à nouveau. Ces trois valeurs sont configurables dans `.env`.
+Une frame est positive lorsque le modèle prédit `Fire` avec une confiance atteignant `FIRE_EVENT_THRESHOLD` (0,95 dans l'exemple). Trois frames positives consécutives sont requises. Une fois un événement créé, le cooldown de 15 secondes interdit un nouvel enregistrement; la séquence doit ensuite être confirmée à nouveau. Ces valeurs sont configurables dans `.env`.
+
+Le seuil d'enregistrement est `FIRE_EVENT_THRESHOLD`. Il constitue une protection opérationnelle et non une correction des faux positifs. `model_metadata.json` est la source de vérité pour les classes (`fire=0`, `no_fire=1`), la taille 224×224, la normalisation et l'architecture. Activez `PREDICTION_DEBUG=true` pour journaliser logits, probabilités, index, shape et statistiques du tenseur dans `logs/app.log`.
+
+L'audit du 13 juillet 2026 a prouvé que le checkpoint peut être extrêmement surconfiant sur des scènes webcam hors domaine. Consultez `FALSE_POSITIVE_AUDIT.md`, `PREDICTION_DIAGNOSTICS.md`, `DATASET_AUDIT.md` et `MODEL_RETRAINING_PLAN.md`. Les captures sont désormais sauvegardées sans le texte d'annotation afin de préserver la preuve brute.
 
 Lors d'une confirmation, l'image est d'abord sauvegardée sous `storage/detections/fire_YYYYMMDD_HHMMSS_microseconds.jpg`, puis l'événement est inséré. Si MySQL est indisponible, l'interface reste active, la capture est conservée et l'erreur est consignée dans `logs/app.log`.
 

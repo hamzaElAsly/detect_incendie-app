@@ -31,23 +31,43 @@ def _int(name: str, default: str, minimum: int = 1) -> int:
     return value
 
 
+def _bool(name: str, default: str = "false") -> bool:
+    value = os.getenv(name, default).strip().lower()
+    if value not in {"true", "false", "1", "0", "yes", "no", "on", "off"}:
+        raise ConfigurationError(f"{name} doit être un booléen (true/false).")
+    return value in {"true", "1", "yes", "on"}
+
+
 @dataclass(frozen=True)
 class Settings:
-    fire_confidence_threshold: float = _float("FIRE_CONFIDENCE_THRESHOLD", "0.80")
+    fire_confidence_threshold: float = _float("FIRE_CONFIDENCE_THRESHOLD", "0.95")
+    fire_event_threshold: float = _float(
+        "FIRE_EVENT_THRESHOLD", os.getenv("FIRE_CONFIDENCE_THRESHOLD", "0.95")
+    )
     detection_cooldown_seconds: int = _int("DETECTION_COOLDOWN_SECONDS", "15", 0)
     required_positive_frames: int = _int("REQUIRED_POSITIVE_FRAMES", "3")
+    prediction_debug: bool = _bool("PREDICTION_DEBUG")
 
     def database_url(self) -> URL:
-        required = {name: os.getenv(name) for name in ("DB_HOST", "DB_NAME", "DB_USER")}
+        required = {
+            name: os.getenv(name)
+            for name in ("DB_HOST", "DB_NAME", "DB_USER")
+        }
         missing = [name for name, value in required.items() if not value]
         if missing:
             raise ConfigurationError(
-                "Configuration MySQL incomplète. Variables manquantes : " + ", ".join(missing)
+                "Configuration MySQL incomplète. Variables manquantes : "
+                + ", ".join(missing)
             )
         port = _int("DB_PORT", "3306")
         return URL.create(
-            "mysql+pymysql", username=required["DB_USER"], password=os.getenv("DB_PASSWORD", ""),
-            host=required["DB_HOST"], port=port, database=required["DB_NAME"], charset="utf8mb4"
+            drivername="mysql+pymysql",
+            username=required["DB_USER"],
+            password=os.getenv("DB_PASSWORD", ""),
+            host=required["DB_HOST"],
+            port=port,
+            database=required["DB_NAME"],
+            query={"charset": "utf8mb4"},
         )
 
 
