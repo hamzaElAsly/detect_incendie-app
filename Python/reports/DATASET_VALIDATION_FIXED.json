@@ -1,0 +1,60 @@
+{
+  "valid": true,
+  "seed": 20260713,
+  "classes": {
+    "0": "fire",
+    "1": "smoke"
+  },
+  "counts": {
+    "train": {
+      "images": 14411,
+      "labels": 14411,
+      "positive": 11552,
+      "negative": 2859,
+      "boxes": {
+        "1": 6951,
+        "0": 19534
+      },
+      "invalid": 0
+    },
+    "val": {
+      "images": 2812,
+      "labels": 2812,
+      "positive": 2812,
+      "negative": 0,
+      "boxes": {
+        "0": 473,
+        "1": 3848
+      },
+      "invalid": 0
+    },
+    "test": {
+      "images": 3086,
+      "labels": 3086,
+      "positive": 2644,
+      "negative": 442,
+      "boxes": {
+        "0": 1733,
+        "1": 2347
+      },
+      "invalid": 0
+    }
+  },
+  "errors": [],
+  "warnings": [
+    "aucun hard negative explicitement documenté"
+  ],
+  "mapping": {
+    "0": "fire",
+    "1": "smoke"
+  },
+  "critical_leaks": 0,
+  "quasi_pairs_grouped": 373,
+  "quasi_definition": "pHash<=4, gray_RMSE<=8, color_RMSE<=12, gray_std>=15",
+  "source_assets": 20568,
+  "excluded_assets": 259,
+  "original_invalid_annotations": 331,
+  "remaining_invalid_annotations": 0,
+  "remaining_unpaired_files": 0,
+  "sanity_training_ready": true
+}
