@@ -8,4 +8,5 @@ logs/*.log
 storage/detections/*.jpg
 .idea/
 .vscode/
-fire_factory_dataset/
+.agents
+# fire_factory_dataset/
