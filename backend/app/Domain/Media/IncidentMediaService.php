@@ -1,0 +1,4 @@
+<?php
+namespace App\Domain\Media;
+use App\Models\FireEvent; use Illuminate\Http\UploadedFile; use Illuminate\Support\Facades\DB; use Illuminate\Support\Facades\Storage; use Illuminate\Support\Str;
+class IncidentMediaService { public function store(FireEvent $event,?UploadedFile $image,?UploadedFile $video):FireEvent{return DB::transaction(function()use($event,$image,$video){$disk=config('filesystems.default');$base='incidents/'.$event->factory_id.'/'.$event->id;if($image)$event->image_path=$image->storeAs($base,Str::ulid().'.'.$image->guessExtension(),$disk);if($video)$event->video_path=$video->storeAs($base,Str::ulid().'.'.$video->guessExtension(),$disk);$event->save();return $event->refresh();});} public function url(string $path):string{$disk=Storage::disk(config('filesystems.default'));return method_exists($disk,'temporaryUrl')?$disk->temporaryUrl($path,now()->addMinutes(10)):$disk->url($path);} }
