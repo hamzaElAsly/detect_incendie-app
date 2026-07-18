@@ -18,6 +18,15 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->string('name');
             $table->string('slug')->unique();
+            $table->string('reference')->nullable()->unique();
+            $table->text('address')->nullable();
+            $table->string('city')->nullable()->index();
+            $table->string('country')->nullable()->index();
+            $table->string('phone', 40)->nullable();
+            $table->string('email')->nullable();
+            $table->string('timezone')->default('UTC');
+            $table->string('status', 30)->default('active')->index();
+            $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
             $table->boolean('is_active')->default(true);
             $table->json('settings')->nullable();
             $table->timestamps();
@@ -27,6 +36,9 @@ return new class extends Migration
             $table->foreignUlid('factory_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('role', 50)->default('member');
+            $table->string('status', 30)->default('active')->index();
+            $table->timestamp('invited_at')->nullable();
+            $table->timestamp('joined_at')->nullable();
             $table->timestamps();
             $table->primary(['factory_id', 'user_id']);
             $table->index(['user_id', 'role']);

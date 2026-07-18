@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany as RoleBelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -63,6 +64,51 @@ class User extends Authenticatable
     public function apiTokens(): HasMany
     {
         return $this->hasMany(ApiToken::class);
+    }
+
+    public function roles(): RoleBelongsToMany
+    {
+        return $this->belongsToMany(Role::class)
+            ->withPivot('factory_id');
+    }
+
+    public function hasRole(string $role, ?Factory $factory = null): bool
+    {
+        if ($this->is_super_admin && $role === 'super_admin') {
+            return true;
+        }
+
+        return $this->roles()
+            ->where('roles.name', $role)
+            ->where(function ($query) use ($factory): void {
+                $query->where('roles.is_platform', true);
+                if ($factory) {
+                    $query->orWhere('role_user.factory_id', $factory->getKey());
+                }
+            })->exists();
+    }
+
+    public function hasPermission(string $permission, ?Factory $factory = null): bool
+    {
+        if ($this->is_super_admin) {
+            return true;
+        }
+
+        return $this->roles()
+            ->whereHas('permissions', fn ($query) => $query->where('permissions.name', $permission))
+            ->where(function ($query) use ($factory): void {
+                $query->where('roles.is_platform', true);
+                if ($factory) {
+                    $query->orWhere('role_user.factory_id', $factory->getKey());
+                }
+            })->exists();
+    }
+
+    public function canAccessFactory(Factory $factory): bool
+    {
+        return $this->is_super_admin
+            || $this->roles()->where('roles.is_platform', true)->exists()
+            || $this->belongsToFactory($factory);
     }
 
     public function belongsToFactory(Factory $factory): bool
