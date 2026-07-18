@@ -24,6 +24,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'status',
         'password',
         'is_active',
         'is_super_admin',
@@ -58,7 +60,9 @@ class User extends Authenticatable
 
     public function factories(): BelongsToMany
     {
-        return $this->belongsToMany(Factory::class)->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(Factory::class)
+            ->withPivot(['role', 'status', 'invited_at', 'joined_at'])
+            ->withTimestamps();
     }
 
     public function apiTokens(): HasMany
