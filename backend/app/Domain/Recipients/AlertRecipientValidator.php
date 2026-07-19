@@ -10,9 +10,14 @@ class AlertRecipientValidator
 {
     public function validate(Factory $factory, array $data): array
     {
+        return Validator::make($data, $this->rules($factory, $data))->validate();
+    }
+
+    public function rules(Factory $factory, array $data): array
+    {
         $channels = $data['channels'] ?? [];
 
-        return Validator::make($data, [
+        return [
             'user_id' => [
                 'nullable',
                 'integer',
@@ -25,6 +30,6 @@ class AlertRecipientValidator
             'channels.*' => ['required', 'distinct', Rule::in(['email', 'database', 'whatsapp', 'sms', 'push'])],
             'severity_min' => ['required', Rule::in(['low', 'medium', 'high', 'critical'])],
             'is_active' => ['required', 'boolean'],
-        ])->validate();
+        ];
     }
 }

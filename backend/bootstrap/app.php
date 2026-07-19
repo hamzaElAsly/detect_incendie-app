@@ -2,6 +2,8 @@
 
 use App\Http\Middleware\AuthenticateApiToken;
 use App\Http\Middleware\ResolveFactoryContext;
+use App\Http\Controllers\Web\Middleware\ResolveWebFactoryContext;
+use App\Http\Controllers\Web\Middleware\ShareWebContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth.api' => AuthenticateApiToken::class,
             'factory' => ResolveFactoryContext::class,
+            'factory.web' => ResolveWebFactoryContext::class,
+            'web.context' => ShareWebContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

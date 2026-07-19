@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
+use Illuminate\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,10 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, MustVerifyEmail, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -118,5 +119,14 @@ class User extends Authenticatable
     public function belongsToFactory(Factory $factory): bool
     {
         return $this->factories()->whereKey($factory->getKey())->exists();
+    }
+
+    public function accessibleFactories(): \Illuminate\Support\Collection
+    {
+        if ($this->is_super_admin || $this->roles()->where('roles.is_platform', true)->exists()) {
+            return Factory::query()->where('is_active', true)->orderBy('name')->get();
+        }
+
+        return $this->factories()->where('factories.is_active', true)->orderBy('factories.name')->get();
     }
 }

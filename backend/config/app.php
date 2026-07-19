@@ -97,6 +97,8 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
+    'demo_password' => env('DEMO_PASSWORD', 'ChangeMe-987!'),
+
     'key' => env('APP_KEY'),
 
     'previous_keys' => [

@@ -62,4 +62,19 @@ class Factory extends Model
     {
         return $this->hasMany(Subscription::class);
     }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function alerts(): HasMany
+    {
+        return $this->hasMany(Alert::class);
+    }
+
+    public function alertRecipients(): HasMany
+    {
+        return $this->hasMany(AlertRecipient::class);
+    }
 }

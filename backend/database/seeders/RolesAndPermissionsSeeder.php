@@ -23,6 +23,10 @@ class RolesAndPermissionsSeeder extends Seeder
                 $role = Role::firstOrCreate(['name' => $name], ['label' => $label, 'is_platform' => in_array($name, ['super_admin', 'platform_admin'], true)]);
                 $role->permissions()->sync(Permission::whereIn('name', $map[$name])->pluck('id'));
             }
+            $rolePermissions = collect(['roles.view', 'roles.manage'])->map(fn (string $name) => Permission::firstOrCreate(['name' => $name]));
+            Role::whereIn('name', ['super_admin', 'platform_admin'])->get()->each(
+                fn (Role $role) => $role->permissions()->syncWithoutDetaching($rolePermissions->pluck('id')),
+            );
         });
     }
 }
