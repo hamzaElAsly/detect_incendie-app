@@ -30,6 +30,35 @@
   .field { @apply min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-red-500 focus:ring-3 focus:ring-red-500/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#364258] dark:bg-[#111827] dark:text-slate-100 dark:placeholder:text-slate-500; }
   .nav-link { @apply relative flex min-h-10 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-white/6 hover:text-white; }
   .nav-link-active { @apply bg-red-950/60 text-white before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-orange-500 hover:bg-red-950/70; }
+  [data-sidebar] nav {
+    --sidebar-scrollbar-thumb: color-mix(in srgb, var(--color-slate-500) 22%, transparent);
+    --sidebar-scrollbar-thumb-hover: color-mix(in srgb, var(--color-slate-400) 58%, transparent);
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    scrollbar-gutter: stable;
+  }
+  [data-sidebar] nav:hover { scrollbar-color: var(--sidebar-scrollbar-thumb-hover) transparent; }
+  [data-sidebar] nav:active { scrollbar-color: var(--color-secondary) transparent; }
+  [data-sidebar] nav::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  [data-sidebar] nav::-webkit-scrollbar-track,
+  [data-sidebar] nav::-webkit-scrollbar-corner { background: transparent; }
+  [data-sidebar] nav::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: transparent;
+    transition: background 200ms ease;
+  }
+  [data-sidebar] nav:hover::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--sidebar-scrollbar-thumb-hover), var(--sidebar-scrollbar-thumb));
+  }
+  [data-sidebar] nav::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--color-slate-400), var(--color-slate-500));
+  }
+  [data-sidebar] nav::-webkit-scrollbar-thumb:active { background: var(--color-secondary); }
   .table-shell { @apply overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-[#273244] dark:bg-[#161d29]; }
   .table-wrap { @apply overflow-x-auto; }
   table { @apply w-full text-left text-sm; }
