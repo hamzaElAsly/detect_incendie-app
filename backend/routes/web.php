@@ -24,6 +24,11 @@ use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\Auth\EmailVerificationController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/locale/{locale}', function (string $locale) {
+    abort_unless(in_array($locale, ['fr', 'en'], true), 404);
+    session(['locale' => $locale]); return back();
+})->name('locale.switch');
+
 Route::get('/', function () {
     return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
 });
