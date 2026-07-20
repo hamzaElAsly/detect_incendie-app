@@ -1,0 +1,3 @@
+@props(['color' => 'slate'])
+@php($classes = ['green'=>'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-500/10 dark:text-green-400','red'=>'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-500/10 dark:text-red-400','amber'=>'bg-amber-50 text-amber-800 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-300','blue'=>'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-500/10 dark:text-blue-300','slate'=>'bg-slate-100 text-slate-700 ring-slate-500/20 dark:bg-slate-500/10 dark:text-slate-300'][$color] ?? 'bg-slate-100 text-slate-700')
+<span {{ $attributes->class("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset $classes") }}><span class="status-dot" aria-hidden="true"></span>{{ $slot }}</span>

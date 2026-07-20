@@ -1,0 +1,2 @@
+@props(['label','value','hint' => null,'tone' => 'blue'])
+<article class="panel overflow-hidden p-5"><div class="mb-3 h-1 w-9 rounded-full {{ $tone === 'amber' ? 'bg-amber-500' : ($tone === 'red' ? 'bg-red-600' : ($tone === 'green' ? 'bg-green-600' : 'bg-blue-600')) }}"></div><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ $label }}</p><p class="mt-1 text-2xl font-black tracking-tight text-slate-900">{{ $value }}</p>@if($hint)<p class="mt-2 text-xs text-slate-500">{{ $hint }}</p>@endif</article>

@@ -1,0 +1,1 @@
+@props(['status'=>'unknown'])@php($color=match($status){'online','healthy','safe'=>'green','warning','degraded','maintenance'=>'amber','critical','error'=>'red',default=>'slate'})<x-badges.status :color="$color" {{ $attributes }}>{{ ucfirst($status) }}</x-badges.status>

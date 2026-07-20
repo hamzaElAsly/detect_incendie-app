@@ -1,0 +1,1 @@
+@props(['title'=>null,'subtitle'=>null])<section {{ $attributes->class('panel') }}>@if($title)<header class="border-b border-slate-200 px-5 py-4 dark:border-[#273244]"><h2 class="font-bold">{{ $title }}</h2>@if($subtitle)<p class="mt-1 text-sm text-slate-500">{{ $subtitle }}</p>@endif</header>@endif<div class="p-5">{{ $slot }}</div></section>
