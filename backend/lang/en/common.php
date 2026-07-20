@@ -1,0 +1,1 @@
+<?php return ['dashboard'=>'Dashboard','close'=>'Close','user'=>'User','factory'=>'Factory','language'=>'Change language','theme'=>'Change theme','logout'=>'Log out','industrial_protection'=>'Intelligent industrial protection','online'=>'Online','offline'=>'Offline','unknown'=>'Unknown','safe'=>'Safe','warning'=>'Warning','critical'=>'Critical','no_data'=>'No data available'];

@@ -1,0 +1,1 @@
+<?php return ['secure_area'=>'Secure area','welcome'=>'Welcome to the command center','subtitle'=>'Monitor your sites, detect risks, and coordinate the response.','email'=>'Email address','password'=>'Password','remember'=>'Remember me','login'=>'Sign in','show_password'=>'Show or hide password'];
