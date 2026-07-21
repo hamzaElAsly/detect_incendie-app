@@ -1,14 +1,82 @@
 <?php
+
 namespace App\Http\Controllers\Web;
-use App\Http\Controllers\Controller; use App\Http\Controllers\Web\Requests\MemberRequest; use App\Models\Role; use App\Models\User; use App\Services\FactoryContext; use Illuminate\Http\RedirectResponse; use Illuminate\Http\Request; use Illuminate\Support\Facades\DB; use Illuminate\Support\Facades\Hash; use Illuminate\Support\Facades\Password; use Illuminate\Support\Str; use Illuminate\View\View;
+
+use App\Domain\Members\MembershipService;
+use App\Http\Controllers\Controller;
+use App\Http\Controllers\Web\Requests\MemberRequest;
+use App\Models\Role;
+use App\Models\User;
+use App\Services\FactoryContext;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
+use Illuminate\View\View;
+
 class MemberController extends Controller
 {
- public function index(Request $r,FactoryContext $c):View{$f=$c->get();abort_unless($r->user()->hasPermission('users.view',$f),403);$members=$f->users()->with('roles')->when($r->q,fn($q,$v)=>$q->where(fn($x)=>$x->where('name','like',"%$v%")->orWhere('email','like',"%$v%")))->paginate(20)->withQueryString();return view('members.index',compact('members'));}
- public function create(FactoryContext $c):View{$f=$c->get();abort_unless(request()->user()->hasPermission('users.invite',$f),403);$roles=Role::where('is_platform',false)->get();return view('members.form',['member'=>new User,'roles'=>$roles]);}
- public function store(MemberRequest $r,FactoryContext $c):RedirectResponse{$f=$c->get();$data=$r->validated();$user=DB::transaction(function()use($f,$data){$u=User::create(['name'=>$data['name'],'email'=>$data['email'],'phone'=>$data['phone']??null,'password'=>Hash::make(Str::random(48)),'is_active'=>true]);$f->users()->attach($u,['role'=>$data['role'],'status'=>'invited','invited_at'=>now()]);$role=Role::where('name',$data['role'])->where('is_platform',false)->firstOrFail();$u->roles()->attach($role,['factory_id'=>$f->id]);return $u;});Password::sendResetLink(['email'=>$user->email]);return redirect()->route('members.index')->with('success','Invitation créée et lien de définition du mot de passe envoyé.');}
- public function edit(User $member,FactoryContext $c):View{$this->guard($member,$c,'users.update');$roles=Role::where('is_platform',false)->get();return view('members.form',compact('member','roles'));}
- public function update(MemberRequest $r,User $member,FactoryContext $c):RedirectResponse{$f=$c->get();$this->guard($member,$c,'users.update');$data=$r->validated();$current=$member->factories()->whereKey($f->id)->firstOrFail()->pivot->role;$this->protectLastOwner($f,$member,$current,$data['role'],$r->boolean('is_active'));DB::transaction(function()use($f,$member,$data,$r){$member->update(['name'=>$data['name']??$member->name,'email'=>$data['email']??$member->email,'phone'=>$data['phone']??$member->phone,'is_active'=>$r->boolean('is_active')]);$f->users()->updateExistingPivot($member->id,['role'=>$data['role'],'status'=>$r->boolean('is_active')?'active':'inactive']);$member->roles()->wherePivot('factory_id',$f->id)->detach();$member->roles()->attach(Role::where('name',$data['role'])->firstOrFail(),['factory_id'=>$f->id]);});return redirect()->route('members.index')->with('success','Membre mis à jour.');}
- public function destroy(User $member,FactoryContext $c):RedirectResponse{$f=$c->get();$this->guard($member,$c,'users.remove');$role=$member->factories()->whereKey($f->id)->firstOrFail()->pivot->role;$this->protectLastOwner($f,$member,$role,'removed',false);DB::transaction(function()use($f,$member){$f->users()->detach($member);$member->roles()->wherePivot('factory_id',$f->id)->detach();});return back()->with('success','Membre retiré de l’usine.');}
- private function guard(User $m,FactoryContext $c,string $p):void{$f=$c->get();abort_unless(!$m->is_super_admin&&$m->belongsToFactory($f)&&request()->user()->hasPermission($p,$f),403);}
- private function protectLastOwner($f,User $m,string $current,string $next,bool $active):void{if($current==='factory_owner'&&($next!=='factory_owner'||!$active)){abort_if($f->users()->wherePivot('role','factory_owner')->wherePivot('status','active')->whereKeyNot($m->id)->doesntExist(),422,'Le dernier Factory Owner actif ne peut pas être retiré.');}}
+    public function index(Request $request, FactoryContext $context): View
+    {
+        $factory = $context->get();
+        abort_unless($request->user()->hasPermission('users.view', $factory), 403);
+        $members = $factory->users()->with('roles')
+            ->when($request->q, fn ($query, $value) => $query->where(fn ($nested) => $nested->where('name', 'like', "%$value%")->orWhere('email', 'like', "%$value%")))
+            ->when($request->status, fn ($query, $value) => $query->wherePivot('status', $value))
+            ->paginate(20)->withQueryString();
+
+        return view('members.index', compact('members'));
+    }
+
+    public function create(FactoryContext $context): View
+    {
+        $factory = $context->get();
+        abort_unless(request()->user()->hasPermission('users.invite', $factory), 403);
+
+        return view('members.form', ['member' => new User, 'roles' => $this->assignableRoles(request()->user())]);
+    }
+
+    public function store(MemberRequest $request, FactoryContext $context, MembershipService $service): RedirectResponse
+    {
+        $user = $service->invite($context->get(), $request->validated(), $request->user());
+        Password::sendResetLink(['email' => $user->email]);
+
+        return redirect()->route('members.index')->with('success', __('phase2.members.invited'));
+    }
+
+    public function edit(User $member, FactoryContext $context): View
+    {
+        $this->guard($member, $context, 'users.update');
+        $member->setRelation('pivot', $member->factories()->whereKey($context->id())->firstOrFail()->pivot);
+
+        return view('members.form', ['member' => $member, 'roles' => $this->assignableRoles(request()->user())]);
+    }
+
+    public function update(MemberRequest $request, User $member, FactoryContext $context, MembershipService $service): RedirectResponse
+    {
+        $this->guard($member, $context, 'users.update');
+        $service->update($context->get(), $member, $request->validated(), $request->user(), $request->boolean('is_active'));
+
+        return redirect()->route('members.index')->with('success', __('phase2.members.updated'));
+    }
+
+    public function destroy(User $member, FactoryContext $context, MembershipService $service): RedirectResponse
+    {
+        $this->guard($member, $context, 'users.remove');
+        $service->remove($context->get(), $member, request()->user());
+
+        return back()->with('success', __('phase2.members.removed'));
+    }
+
+    private function guard(User $member, FactoryContext $context, string $permission): void
+    {
+        $factory = $context->get();
+        abort_unless(! $member->is_super_admin && $member->belongsToFactory($factory) && request()->user()->hasPermission($permission, $factory), 403);
+    }
+
+    private function assignableRoles(User $actor)
+    {
+        return Role::query()->where('is_platform', false)
+            ->when(! $actor->is_super_admin && ! $actor->roles()->where('roles.is_platform', true)->exists(), fn ($query) => $query->where('name', '!=', 'factory_owner'))
+            ->orderBy('label')->get();
+    }
 }

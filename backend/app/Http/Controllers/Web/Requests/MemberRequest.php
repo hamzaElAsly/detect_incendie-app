@@ -1,8 +1,40 @@
 <?php
+
 namespace App\Http\Controllers\Web\Requests;
-use Illuminate\Foundation\Http\FormRequest; use Illuminate\Validation\Rule;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
 class MemberRequest extends FormRequest
 {
- public function authorize():bool{$f=$this->attributes->get('factory');return $f&&$this->user()->hasPermission($this->route('member')?'users.update':'users.invite',$f);}
- public function rules():array{return ['name'=>[$this->route('member')?'sometimes':'required','string','max:255'],'email'=>[$this->route('member')?'sometimes':'required','email',Rule::unique('users')->ignore($this->route('member'))],'phone'=>['nullable','string','max:40'],'role'=>['required',Rule::exists('roles','name')->where('is_platform',false)],'is_active'=>['nullable','boolean']];}
+    public function authorize(): bool
+    {
+        $factory = $this->attributes->get('factory');
+
+        return $factory && $this->user()->hasPermission($this->route('member') ? 'users.update' : 'users.invite', $factory);
+    }
+
+    public function rules(): array
+    {
+        $member = $this->route('member');
+        $emailRules = [$member ? 'sometimes' : 'required', 'email:rfc', 'max:255'];
+        if ($member) {
+            $emailRules[] = Rule::unique('users')->ignore($member);
+        }
+
+        return [
+            'name' => [$member ? 'sometimes' : 'required', 'string', 'max:255'],
+            'email' => $emailRules,
+            'phone' => ['nullable', 'string', 'max:40'],
+            'role' => ['required', Rule::exists('roles', 'name')->where('is_platform', false)],
+            'is_active' => ['nullable', 'boolean'],
+        ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('email')) {
+            $this->merge(['email' => strtolower(trim((string) $this->input('email')))]);
+        }
+    }
 }
