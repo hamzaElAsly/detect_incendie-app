@@ -20,6 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   document.querySelectorAll('[data-sidebar-toggle]').forEach((button) => button.addEventListener('click', () => openSidebar(sidebar?.classList.contains('-translate-x-full'))));
   overlay?.addEventListener('click', () => openSidebar(false));
+  const setSidebarCollapsed = (collapsed) => {
+    root.classList.toggle('sidebar-collapsed', collapsed);
+    localStorage.setItem('fire-command-sidebar', collapsed ? 'collapsed' : 'expanded');
+    document.querySelectorAll('[data-sidebar-collapse]').forEach(button => button.setAttribute('aria-expanded', String(!collapsed)));
+  };
+  setSidebarCollapsed(localStorage.getItem('fire-command-sidebar') === 'collapsed');
+  document.querySelectorAll('[data-sidebar-collapse]').forEach(button => button.addEventListener('click', () => setSidebarCollapsed(!root.classList.contains('sidebar-collapsed'))));
+  addEventListener('resize', () => { if (innerWidth >= 1024) openSidebar(false); });
   document.querySelectorAll('[data-theme-toggle]').forEach((button) => button.addEventListener('click', () => applyTheme(root.classList.contains('dark') ? 'light' : 'dark')));
   document.querySelectorAll('[data-dropdown-toggle]').forEach((button) => button.addEventListener('click', (event) => {
     event.stopPropagation(); const menu = document.getElementById(button.getAttribute('aria-controls')); const expanded = button.getAttribute('aria-expanded') === 'true';
