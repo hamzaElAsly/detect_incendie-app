@@ -88,6 +88,29 @@ désormais l'intégration IA, l'Edge Agent, les tests et le déploiement.
 -   Uniformiser toutes les pages
 -   Optimiser le responsive
 
+**Statut : En cours**
+- [x] Thème Fire Command Center finalisé techniquement
+- [x] Layout principal uniformisé
+- [x] Sidebar finalisée
+- [x] Topbar finalisée
+- [x] Dashboard uniformisé
+- [x] Pages CRUD reliées au design system partagé
+- [x] Boutons adaptés
+- [x] Formulaires uniformisés par styles et composants partagés
+- [x] Tableaux uniformisés
+- [x] Modales de confirmation uniformisées
+- [x] Dark/Light mode vérifié par build et revue statique
+- [ ] Responsive mobile vérifié manuellement sur navigateur
+- [ ] Responsive tablette vérifié manuellement sur navigateur
+- [ ] Responsive desktop vérifié manuellement sur navigateur
+- [x] Build frontend réussi — 55 modules
+- [x] Tests réussis — 20 tests, 89 assertions
+
+#### Points restants après la Phase 1
+- Effectuer une recette visuelle manuelle multi-navigateurs aux neuf largeurs cibles
+- Migrer les libellés métier historiques encore codés en français vers les traductions FR/EN
+- Ne pas créer Forgot Password, Reset Password ou 2FA avant que les routes web correspondantes existent
+
 ### Phase 2 --- Compléter les modules
 
 -   Factories

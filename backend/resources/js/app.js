@@ -32,9 +32,25 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-dropdown-toggle]').forEach((button) => button.addEventListener('click', (event) => {
     event.stopPropagation(); const menu = document.getElementById(button.getAttribute('aria-controls')); const expanded = button.getAttribute('aria-expanded') === 'true';
     document.querySelectorAll('[data-dropdown-menu]').forEach(el => { if (el !== menu) el.classList.add('hidden'); });
+    document.querySelectorAll('[data-dropdown-toggle]').forEach(el => { if (el !== button) el.setAttribute('aria-expanded', 'false'); });
     button.setAttribute('aria-expanded', String(!expanded)); menu?.classList.toggle('hidden', expanded);
   }));
-  document.addEventListener('click', () => document.querySelectorAll('[data-dropdown-menu]').forEach(el => el.classList.add('hidden')));
+  const closeMenus = () => { document.querySelectorAll('[data-dropdown-menu]').forEach(el => el.classList.add('hidden')); document.querySelectorAll('[data-dropdown-toggle]').forEach(el => el.setAttribute('aria-expanded','false')); };
+  document.addEventListener('click', closeMenus);
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeMenus(); openSidebar(false); document.querySelector('[data-confirm-dialog][open]')?.close(); } });
   document.querySelectorAll('[data-password-toggle]').forEach(button => button.addEventListener('click', () => { const input = document.getElementById(button.dataset.passwordToggle); if (input) { input.type = input.type === 'password' ? 'text' : 'password'; button.setAttribute('aria-pressed', String(input.type === 'text')); } }));
-  document.querySelectorAll('form').forEach(form => form.addEventListener('submit', () => form.querySelectorAll('button[type="submit"]').forEach(button => { button.disabled = true; button.setAttribute('aria-busy','true'); })));
+  const setFormLoading = form => form.querySelectorAll('button[type="submit"]').forEach(button => { button.disabled = true; button.setAttribute('aria-busy','true'); });
+  document.querySelectorAll('form:not([data-confirm])').forEach(form => form.addEventListener('submit', () => setFormLoading(form)));
+  const dialog = document.querySelector('[data-confirm-dialog]');
+  let pendingForm = null;
+  document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => {
+    if (form.dataset.confirmed === 'true' || !dialog) return;
+    event.preventDefault(); pendingForm = form;
+    dialog.querySelector('[data-confirm-message]').textContent = form.dataset.confirm;
+    dialog.showModal(); dialog.querySelector('[data-confirm-accept]')?.focus();
+  }));
+  dialog?.querySelector('[data-confirm-accept]')?.addEventListener('click', () => {
+    if (!pendingForm) return; pendingForm.dataset.confirmed = 'true'; dialog.close(); setFormLoading(pendingForm); pendingForm.requestSubmit(); pendingForm = null;
+  });
+  dialog?.querySelectorAll('[data-confirm-cancel]').forEach(button => button.addEventListener('click', () => { dialog.close(); pendingForm = null; }));
 });

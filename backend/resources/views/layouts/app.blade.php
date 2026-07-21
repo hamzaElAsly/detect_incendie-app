@@ -89,5 +89,6 @@
     <main class="mx-auto w-full max-w-[1920px] p-4 sm:p-6 lg:p-8"><x-alerts.flash />@yield('content')</main>
     <footer class="border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-500 dark:border-[#273244] sm:px-8">© {{ date('Y') }} Fire Command Center · {{ __('common.industrial_protection') }}</footer>
 </div>
+<dialog data-confirm-dialog class="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/70 dark:border-[#273244] dark:bg-[#161d29] dark:text-slate-100"><div class="p-6"><h2 class="text-lg font-bold">{{ __('common.confirm_action') }}</h2><p data-confirm-message class="mt-2 text-sm text-slate-500"></p><div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><x-ui.button variant="secondary" data-confirm-cancel>{{ __('common.cancel') }}</x-ui.button><x-ui.button variant="danger" data-confirm-accept>{{ __('common.confirm') }}</x-ui.button></div></div></dialog>
 </body>
 </html>

@@ -1,2 +1,2 @@
-@if(session('success'))<div class="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800" role="status">{{ session('success') }}</div>@endif
-@if(session('error'))<div class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800" role="alert">{{ session('error') }}</div>@endif
+@if(session('success'))<div class="mb-5 flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-800 dark:border-green-800 dark:bg-green-950/40 dark:text-green-300" role="status"><span aria-hidden="true">✓</span><span>{{ session('success') }}</span></div>@endif
+@if(session('error'))<div class="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300" role="alert"><span aria-hidden="true">!</span><span>{{ session('error') }}</span></div>@endif
