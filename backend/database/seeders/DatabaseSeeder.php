@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Http\Controllers\Web\Seeders\DemoDashboardSeeder;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Http\Controllers\Web\Seeders\DemoDashboardSeeder;
 
 class DatabaseSeeder extends Seeder
 {

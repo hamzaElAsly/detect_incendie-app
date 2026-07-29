@@ -1,6 +1,6 @@
 # État d'avancement — Plateforme Detect Incendie SaaS
 
-*Dernière mise à jour : 21 juillet 2026*
+*Dernière mise à jour : 29 juillet 2026*
 
 ## Vue d'ensemble
 
@@ -23,7 +23,7 @@ Caméras → Python Edge Agent → YOLO → Laravel API → MySQL → Fire Comma
 | Entraînement YOLO | 20 % | À réaliser |
 | Edge Agent Python | 25 % | Début |
 | Notifications temps réel | 35 % | Partiel |
-| Tests | 55 % | 27 tests / 103 assertions |
+| Tests | 85 % | 52 tests / 345 assertions |
 | Déploiement Production | 10 % | Non commencé |
 
 ## Progression globale
@@ -107,14 +107,14 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 
 - [x] Factories
 - [x] Members
-- [ ] Users
+- [x] Users
 - [x] Roles & Permissions
-- [ ] Camera Health
+- [x] Camera Health
 - [x] Alert Recipients
-- [ ] API Clients
+- [x] API Clients
 - [x] Plans
 - [x] Subscriptions
-- [ ] Profile
+- [x] Profile
 
 ### Factories
 
@@ -137,7 +137,7 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 - [x] Liste, détail, édition et désactivation protégés
 - [x] Auto-désactivation et dernier super-admin protégés
 - [x] Audit ajouté
-- [ ] Création globale et attribution de rôles absentes des routes actuelles
+- [x] Création globale transactionnelle et attribution de rôles plateforme sécurisée
 
 ### Roles & Permissions
 
@@ -149,9 +149,9 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 ### Camera Health
 
 - [x] Liste, filtres, historique et isolation tenant vérifiés
-- [ ] Endpoint heartbeat Edge Agent absent
-- [ ] Authentification caméra/API Client absente
-- [ ] Seuil offline configurable absent
+- [x] Endpoint heartbeat Edge Agent et limitation de débit
+- [x] Authentification API Client, scope et isolation tenant
+- [x] Seuil offline global et configurable par factory
 
 ### Alert Recipients
 
@@ -163,8 +163,8 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 
 - [x] Secret à affichage unique et stockage hashé
 - [x] Rotation, révocation et audit
-- [ ] Expiration et scopes absents du schéma
-- [ ] Authentification Edge Agent par API Client absente
+- [x] Expiration, scopes et dernière utilisation ajoutés
+- [x] Authentification Edge Agent testée
 
 ### Plans
 
@@ -183,32 +183,78 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 - [x] Nom, email, téléphone et mot de passe sécurisés
 - [x] Revalidation email conservée
 - [x] Modification de rôle impossible depuis le profil
-- [ ] Avatar, timezone et préférences absents du schéma
+- [x] Avatar sécurisé, timezone et préférences strictes
+
+### **Statut : Terminée techniquement — migration en attente d’application sur l’environnement cible**
+
+- [x] Factories
+- [x] Members
+- [x] Users
+- [x] Roles & Permissions
+- [x] Camera Health
+- [x] Alert Recipients
+- [x] API Clients
+- [x] Plans
+- [x] Subscriptions
+- [x] Profile
 
 ### Validation de la Phase 2
 
 - `composer install --no-interaction --prefer-dist` : réussi
 - `npm.cmd install` : réussi avec avertissement postinstall `esbuild`
 - `php artisan optimize:clear` : réussi
-- `php artisan migrate:status` : 5 migrations appliquées
-- `php artisan route:list` : 111 routes chargées
-- `php artisan test` : 27 tests réussis, 103 assertions
+- `php artisan migrate:status` : 5 migrations appliquées, 1 migration additive en attente
+- `php artisan route:list` : 114 routes chargées
+- `php artisan test` : 33 tests réussis, 133 assertions
 - `npm.cmd run build` : réussi, 55 modules transformés
 - `vendor/bin/pint` : exécuté ; aucun reformatage hors périmètre conservé
 
 ### Points restants après la Phase 2
 
-- Définir et implémenter le protocole heartbeat et l'authentification Edge Agent
-- Étendre le schéma API Clients avec expiration et scopes
-- Décider le périmètre produit du CRUD Users global
-- Décider les champs persistants de préférences Profile
-- Effectuer la recette responsive manuelle multi-navigateurs
+- Appliquer la migration additive sur l'environnement cible après sauvegarde
+- Effectuer la recette responsive manuelle multi-navigateurs (non cochée)
+- Diagnostiquer le script Composer post-autoload qui dépasse 120 secondes sous le sandbox
+
+### Résumé de finalisation du 29 juillet 2026
+
+- Users : création globale, rôle plateforme contrôlé, transaction, audit et tests.
+- API Clients : scopes, expiration, révocation horodatée, authentification Edge et dernière utilisation.
+- Camera Health : heartbeat tenant-scoped, statut centralisé, seuil configurable et métriques courantes.
+- Profile : avatar Storage, timezone PHP, préférences strictes et audit.
+- Migration ajoutée : `2026_07_29_000001_complete_phase_two_modules`.
+- Build Vite réussi avec 55 modules ; 33 tests et 133 assertions réussis.
+- Checklist manuelle créée dans `RESPONSIVE_MANUAL_CHECKLIST.md` sans fausse validation navigateur.
 
 ## Phase 3 — Sécurité
 
-- [ ] Audit complet des permissions
-- [ ] Renforcement de l'isolation des données
-- [ ] Tests de sécurité complémentaires
+**Statut : Terminée techniquement — validations d’infrastructure manuelles restantes**
+
+- [x] Audit complet des permissions
+- [x] Renforcement de l'isolation des données
+- [x] Tests de sécurité complémentaires
+
+### Validation Phase 3 — 29 juillet 2026
+
+- Matrice complète : `SECURITY_PERMISSION_MATRIX.md`
+- Rapport OWASP et risques résiduels : `SECURITY_PHASE_3_REPORT.md`
+- Utilisateurs désactivés bloqués sur les routes tenant et globales
+- Autorisation tenant exécutée avant validation des mutations
+- Heartbeat strict, protégé contre les champs inattendus et limité à 120/min/client
+- Actions sensibles limitées par usage
+- En-têtes HTTP défensifs ajoutés
+- CORS explicite et CSP Report-Only ajoutés
+- Injection de formules CSV neutralisée
+- Uploads incidents privés, autorisés, randomisés et servis par une route tenant-scoped
+- Changements Settings protégés par permission et journalisés
+- Stored XSS et escalades de privilèges couverts par tests
+- `php artisan test` : 52 tests réussis, 345 assertions
+- `php artisan route:list` : 115 routes
+- `npm run build` : réussi, 55 modules
+- Migration additive Phase 2 : appliquée (batch 2)
+- Migrations Phase 3 créées : 0 ; migrations en attente : 0
+- Vulnérabilités : 0 Critical, 3 High corrigées, 9 Medium corrigées, 1 Low corrigée, aucune Critical/High ouverte
+- Checklist manuelle : 33 contrôles d'infrastructure restant à valider
+- Audits Composer/npm non concluants dans le sandbox sans accès réseau ; à exécuter en CI
 
 ## Phase 4 — Intelligence artificielle
 

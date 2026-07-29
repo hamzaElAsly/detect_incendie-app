@@ -1,2 +1,38 @@
-﻿@extends('layouts.app',['title'=>'Détail événement'])
-@section('content')<a class="text-sm font-semibold text-primary" href="{{ route('events.index') }}">← Événements</a><div class="mt-4 grid gap-6 xl:grid-cols-3"><section class="panel overflow-hidden xl:col-span-2"><div class="aspect-video bg-slate-950">@if($event->image_path)<img src="{{ Storage::url($event->image_path) }}" alt="Capture de la détection" class="h-full w-full object-contain">@else<div class="grid h-full place-items-center text-slate-400">Aucune capture disponible</div>@endif</div><div class="grid gap-4 p-6 sm:grid-cols-4"><div><p class="text-xs text-slate-500">Type</p><strong>{{ $event->type->value }}</strong></div><div><p class="text-xs text-slate-500">Sévérité</p><strong>{{ $event->severity->value }}</strong></div><div><p class="text-xs text-slate-500">Confiance</p><strong>{{ round((float)$event->confidence*100) }}%</strong></div><div><p class="text-xs text-slate-500">Statut</p><strong>{{ $event->status->value }}</strong></div></div></section><aside class="space-y-5"><section class="panel p-5"><h3 class="font-bold">Actions opérationnelles</h3><div class="mt-4 grid gap-3">@can('events.confirm')@if($event->status->value==='detected')<form method="POST" action="{{ route('events.confirm',$event) }}">@csrf<button class="btn-primary w-full">Confirmer</button></form>@endif @endcan @can('events.mark_false_alarm')@if(in_array($event->status->value,['detected','confirmed']))<form method="POST" action="{{ route('events.false-alarm',$event) }}" data-confirm="Marquer comme faux positif ?">@csrf<button class="btn-secondary w-full">Faux positif</button></form>@endif @endcan @can('events.resolve')@if(in_array($event->status->value,['detected','confirmed']))<form method="POST" action="{{ route('events.resolve',$event) }}">@csrf<button class="btn-primary w-full">Résoudre</button></form>@endif @endcan</div></section><section class="panel p-5"><h3 class="font-bold">Contexte</h3><dl class="mt-4 space-y-3 text-sm"><div><dt class="text-slate-500">Caméra</dt><dd class="font-semibold">{{ $event->camera?->name }}</dd></div><div><dt class="text-slate-500">Zone</dt><dd class="font-semibold">{{ $event->zone?->name ?? '—' }}</dd></div><div><dt class="text-slate-500">Détecté le</dt><dd>{{ $event->detected_at->format('d/m/Y H:i:s') }}</dd></div><div><dt class="text-slate-500">Détections IA</dt><dd>{{ $event->detections->count() }}</dd></div></dl></section></aside></div><section class="panel mt-6 p-6"><h3 class="font-bold">Chronologie associée</h3><div class="mt-4 grid gap-4 sm:grid-cols-3"><div class="rounded-xl bg-slate-50 p-4"><strong>{{ $event->alerts->count() }}</strong><p class="text-sm text-slate-500">Alertes</p></div><div class="rounded-xl bg-slate-50 p-4"><strong>{{ $event->notifications->count() }}</strong><p class="text-sm text-slate-500">Notifications</p></div><div class="rounded-xl bg-slate-50 p-4"><strong>{{ $event->detections->count() }}</strong><p class="text-sm text-slate-500">Objets détectés</p></div></div></section>@endsection
+@extends('layouts.app',['title'=>'Détail événement'])
+@section('content')
+<a class="text-sm font-semibold text-primary" href="{{ route('events.index') }}">← Événements</a>
+<div class="mt-4 grid gap-6 xl:grid-cols-3">
+    <section class="panel overflow-hidden xl:col-span-2">
+        <div class="aspect-video bg-slate-950">
+            @if($event->image_path)
+                <img src="{{ route('events.media',[$event,'image']) }}" alt="Capture de la détection" class="h-full w-full object-contain">
+            @else
+                <div class="grid h-full place-items-center text-slate-400">Aucune capture disponible</div>
+            @endif
+        </div>
+        <div class="grid gap-4 p-6 sm:grid-cols-4">
+            <div><p class="text-xs text-slate-500">Type</p><strong>{{ $event->type->value }}</strong></div>
+            <div><p class="text-xs text-slate-500">Sévérité</p><strong>{{ $event->severity->value }}</strong></div>
+            <div><p class="text-xs text-slate-500">Confiance</p><strong>{{ round((float)$event->confidence*100) }}%</strong></div>
+            <div><p class="text-xs text-slate-500">Statut</p><strong>{{ $event->status->value }}</strong></div>
+        </div>
+    </section>
+    <aside class="space-y-5">
+        <section class="panel p-5"><h3 class="font-bold">Actions opérationnelles</h3><div class="mt-4 grid gap-3">
+            @can('events.confirm') @if($event->status->value==='detected')<form method="POST" action="{{ route('events.confirm',$event) }}">@csrf<button class="btn-primary w-full">Confirmer</button></form>@endif @endcan
+            @can('events.mark_false_alarm') @if(in_array($event->status->value,['detected','confirmed']))<form method="POST" action="{{ route('events.false-alarm',$event) }}" data-confirm="Marquer comme faux positif ?">@csrf<button class="btn-secondary w-full">Faux positif</button></form>@endif @endcan
+            @can('events.resolve') @if(in_array($event->status->value,['detected','confirmed']))<form method="POST" action="{{ route('events.resolve',$event) }}">@csrf<button class="btn-primary w-full">Résoudre</button></form>@endif @endcan
+        </div></section>
+        <section class="panel p-5"><h3 class="font-bold">Contexte</h3><dl class="mt-4 space-y-3 text-sm">
+            <div><dt class="text-slate-500">Caméra</dt><dd class="font-semibold">{{ $event->camera?->name }}</dd></div>
+            <div><dt class="text-slate-500">Zone</dt><dd class="font-semibold">{{ $event->zone?->name ?? '—' }}</dd></div>
+            <div><dt class="text-slate-500">Détecté le</dt><dd>{{ $event->detected_at->format('d/m/Y H:i:s') }}</dd></div>
+        </dl></section>
+    </aside>
+</div>
+<section class="panel mt-6 p-6"><h3 class="font-bold">Chronologie associée</h3><div class="mt-4 grid gap-4 sm:grid-cols-3">
+    <div class="rounded-xl bg-slate-50 p-4"><strong>{{ $event->alerts->count() }}</strong><p class="text-sm text-slate-500">Alertes</p></div>
+    <div class="rounded-xl bg-slate-50 p-4"><strong>{{ $event->notifications->count() }}</strong><p class="text-sm text-slate-500">Notifications</p></div>
+    <div class="rounded-xl bg-slate-50 p-4"><strong>{{ $event->detections->count() }}</strong><p class="text-sm text-slate-500">Objets détectés</p></div>
+</div></section>
+@endsection

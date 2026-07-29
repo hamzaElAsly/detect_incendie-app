@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
-use Illuminate\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany as RoleBelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 
 class User extends Authenticatable implements MustVerifyEmailContract
 {
@@ -26,6 +27,9 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'name',
         'email',
         'phone',
+        'avatar_path',
+        'timezone',
+        'preferences',
         'status',
         'password',
         'is_active',
@@ -56,6 +60,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
             'is_active' => 'boolean',
             'is_super_admin' => 'boolean',
             'last_login_at' => 'datetime',
+            'preferences' => 'array',
         ];
     }
 
@@ -121,7 +126,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->factories()->whereKey($factory->getKey())->exists();
     }
 
-    public function accessibleFactories(): \Illuminate\Support\Collection
+    public function accessibleFactories(): Collection
     {
         if ($this->is_super_admin || $this->roles()->where('roles.is_platform', true)->exists()) {
             return Factory::query()->where('is_active', true)->orderBy('name')->get();

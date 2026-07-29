@@ -25,6 +25,8 @@ class ApiClientService
                 'secret_hash' => hash('sha256', $secret),
                 'status' => 'active',
                 'allowed_ips' => $attributes['allowed_ips'] ?? null,
+                'scopes' => $attributes['scopes'] ?? [],
+                'expires_at' => $attributes['expires_at'] ?? null,
             ])->save();
             $this->audit->record('api_client.created', $client, [], $client->toArray(), $factory, $actor);
 
@@ -37,7 +39,7 @@ class ApiClientService
         return DB::transaction(function () use ($client, $actor): ApiClientCredentials {
             $secret = Str::random(64);
             $client->forceFill(['secret_hash' => hash('sha256', $secret)])->save();
-            $this->audit->record('api_client.secret_regenerated', $client, [], ['secret' => $secret], $client->factory, $actor);
+            $this->audit->record('api_client.secret_regenerated', $client, [], ['rotated_at' => now()->toIso8601String()], $client->factory, $actor);
 
             return new ApiClientCredentials($client->refresh(), $secret);
         });
@@ -47,7 +49,7 @@ class ApiClientService
     {
         abort_unless(in_array($status, ['active', 'inactive', 'revoked'], true), 422);
         $old = $client->status;
-        $client->update(['status' => $status]);
+        $client->update(['status' => $status, 'revoked_at' => $status === 'revoked' ? now() : $client->revoked_at]);
         $this->audit->record('api_client.status_changed', $client, ['status' => $old], ['status' => $status], $client->factory, $actor);
 
         return $client->refresh();

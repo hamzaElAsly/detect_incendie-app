@@ -1,1 +1,3 @@
-<?php return ['secure_area'=>'Secure area','welcome'=>'Welcome to the command center','subtitle'=>'Monitor your sites, detect risks, and coordinate the response.','email'=>'Email address','password'=>'Password','remember'=>'Remember me','login'=>'Sign in','show_password'=>'Show or hide password','verify_title'=>'Verify your email','verify_sent'=>'A verification link was sent to :email.','resend'=>'Resend verification link'];
+<?php
+
+return ['secure_area' => 'Secure area', 'welcome' => 'Welcome to the command center', 'subtitle' => 'Monitor your sites, detect risks, and coordinate the response.', 'email' => 'Email address', 'password' => 'Password', 'remember' => 'Remember me', 'login' => 'Sign in', 'show_password' => 'Show or hide password', 'verify_title' => 'Verify your email', 'verify_sent' => 'A verification link was sent to :email.', 'resend' => 'Resend verification link'];

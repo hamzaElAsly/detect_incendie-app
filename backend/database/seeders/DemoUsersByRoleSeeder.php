@@ -87,7 +87,7 @@ class DemoUsersByRoleSeeder extends Seeder
 
                 $role = Role::where('name', $data['role'])->firstOrFail();
 
-                if (!($data['platform'] ?? false)) {
+                if (! ($data['platform'] ?? false)) {
                     $factory->users()->syncWithoutDetaching([
                         $user->id => [
                             'status' => 'active',

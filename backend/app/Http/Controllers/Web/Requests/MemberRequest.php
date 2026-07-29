@@ -10,8 +10,11 @@ class MemberRequest extends FormRequest
     public function authorize(): bool
     {
         $factory = $this->attributes->get('factory');
+        $member = $this->route('member');
 
-        return $factory && $this->user()->hasPermission($this->route('member') ? 'users.update' : 'users.invite', $factory);
+        return $factory
+            && (! $member || (! $member->is_super_admin && $member->belongsToFactory($factory)))
+            && $this->user()->hasPermission($member ? 'users.update' : 'users.invite', $factory);
     }
 
     public function rules(): array

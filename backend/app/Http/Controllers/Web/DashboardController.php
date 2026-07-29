@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers\Web;
+
 use App\Domain\Dashboard\DashboardService;
 use App\Http\Controllers\Controller;
 use App\Models\Alert;
@@ -11,6 +13,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Services\FactoryContext;
 use Illuminate\View\View;
+
 class DashboardController extends Controller
 {
     public function __invoke(FactoryContext $context, DashboardService $dashboard): View
@@ -31,6 +34,7 @@ class DashboardController extends Controller
             'factories' => Factory::count(), 'users' => User::count(), 'cameras' => Camera::count(),
             'events' => FireEvent::count(), 'subscriptions' => Subscription::whereIn('status', ['trial', 'active'])->count(),
         ] : null;
+
         return view('dashboard.index', compact('factory', 'summary', 'metrics', 'eventsChart', 'cameraStatus', 'recentEvents', 'criticalAlerts', 'recentActivity', 'platform', 'liveCameras', 'zones'));
     }
 }
