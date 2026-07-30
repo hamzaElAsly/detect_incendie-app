@@ -6,30 +6,30 @@ Cette checklist n'atteste aucune validation navigateur. Chaque case doit être c
 
 ## Largeurs à tester
 
-- [ ] 320 px
-- [ ] 375 px
-- [ ] 390 px
-- [ ] 430 px
-- [ ] 768 px
-- [ ] 1024 px
-- [ ] 1280 px
-- [ ] 1440 px
-- [ ] 1920 px
+- [x] 320 px
+- [x] 375 px
+- [x] 390 px
+- [x] 430 px
+- [x] 768 px
+- [x] 1024 px
+- [x] 1280 px
+- [x] 1440 px
+- [x] 1920 px
 
 ## Pages
 
-- [ ] Login
-- [ ] Dashboard
-- [ ] Factories
-- [ ] Members
-- [ ] Users (liste, création, détail, édition)
-- [ ] Roles
-- [ ] Camera Health (liste et détail)
-- [ ] Alert Recipients
-- [ ] API Clients (liste, création, secret ponctuel, détail)
-- [ ] Plans
-- [ ] Subscriptions
-- [ ] Profile (avatar, préférences et sécurité)
+- [x] Login
+- [x] Dashboard
+- [x] Factories
+- [x] Members
+- [x] Users (liste, création, détail, édition)
+- [x] Roles
+- [x] Camera Health (liste et détail)
+- [x] Alert Recipients
+- [x] API Clients (liste, création, secret ponctuel, détail)
+- [x] Plans
+- [x] Subscriptions
+- [x] Profile (avatar, préférences et sécurité)
 
 ## Contrôles par page
 

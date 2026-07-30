@@ -49,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('auth', fn (Request $request) => Limit::perMinute(10)->by($request->ip().'|'.$request->input('email')));
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by((string) optional($request->user())->getAuthIdentifier() ?: $request->ip()));
         RateLimiter::for('edge', fn (Request $request) => Limit::perMinute(120)->by((string) $request->attributes->get('api_client')?->id ?: $request->ip()));
+        RateLimiter::for('edge-detection', fn (Request $request) => Limit::perMinute(60)->by((string) $request->attributes->get('api_client')?->id ?: $request->ip()));
         RateLimiter::for('sensitive-write', fn (Request $request) => Limit::perMinute(20)->by((string) $request->user()?->id ?: $request->ip()));
         RateLimiter::for('secret-management', fn (Request $request) => Limit::perMinute(10)->by((string) $request->user()?->id ?: $request->ip()));
         RateLimiter::for('export', fn (Request $request) => Limit::perMinute(10)->by((string) $request->user()?->id ?: $request->ip()));

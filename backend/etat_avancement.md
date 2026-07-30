@@ -258,9 +258,29 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 
 ## Phase 4 — Intelligence artificielle
 
+**Statut : Infrastructure IA prête — entraînement réel en attente**
+
 - [ ] Entraîner YOLO
 - [ ] Évaluer les performances
 - [ ] Intégrer le modèle
+
+### Validation Phase 4 — 29 juillet 2026
+
+- Dataset trouvé : 20 309 images, 20 309 labels, classes `fire` et `smoke`
+- Splits présents : 14 411 train, 2 812 validation, 3 086 test
+- Artefact de validation antérieur valide; revalidation courante à rejouer sans timeout
+- Environnement : Python 3.12.10, PyTorch 2.13.0 CPU, Ultralytics 8.4.95, CUDA absent
+- Poids génériques YOLO11 présents; aucun `best.pt`/`last.pt` spécialisé
+- Entraînement complet et évaluation indépendante non exécutés
+- Edge Agent Laravel préparé avec filtrage temporel et file offline
+- API Laravel de détection intégrée avec scope, tenant, idempotence, audit et snapshot privé
+- Tests rapides Edge : 6 réussis via `unittest`; pytest absent
+- Tests Laravel ciblés : 6 réussis, 34 assertions
+- Suite Laravel complète : 58 tests réussis, 379 assertions
+- `php artisan route:list` : 116 routes
+- Build Vite réussi : 55 modules transformés
+- Migrations en attente : 0
+- Intégration réelle modèle/caméra/API non validée; case laissée décochée
 
 ## Phase 5 — Edge Agent
 

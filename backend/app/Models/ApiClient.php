@@ -10,7 +10,7 @@ class ApiClient extends Model
 {
     use BelongsToFactory,HasUlids;
 
-    public const SCOPES = ['camera:heartbeat', 'camera:read'];
+    public const SCOPES = ['camera:heartbeat', 'camera:read', 'event:create'];
 
     protected $fillable = ['name', 'client_id', 'status', 'last_used_at', 'last_used_ip', 'allowed_ips', 'scopes', 'expires_at', 'revoked_at'];
 

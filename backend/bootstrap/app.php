@@ -2,6 +2,7 @@
 
 use App\Domain\ApiClients\AuthenticateEdgeClient;
 use App\Domain\ApiClients\EnsureEdgeClientScope;
+use App\Domain\Detections\EdgeDetectionController;
 use App\Domain\Health\CameraHeartbeatController;
 use App\Domain\Security\AddSecurityHeaders;
 use App\Domain\Users\GlobalUserController;
@@ -29,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('api/edge')
                 ->post('cameras/{camera}/heartbeat', CameraHeartbeatController::class)
                 ->name('edge.cameras.heartbeat');
+            Route::middleware(['api', 'auth.edge', 'edge.scope:event:create', 'throttle:edge-detection'])
+                ->prefix('api/edge')
+                ->post('cameras/{camera}/detections', EdgeDetectionController::class)
+                ->name('edge.cameras.detections');
             Route::middleware(['web', 'auth', 'verified', 'web.context'])->group(function (): void {
                 Route::get('users/create', [GlobalUserController::class, 'create'])->name('users.create');
                 Route::post('users', [GlobalUserController::class, 'store'])->middleware('throttle:sensitive-write')->name('users.store');
