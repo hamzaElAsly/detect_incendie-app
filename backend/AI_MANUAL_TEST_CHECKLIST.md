@@ -1,0 +1,24 @@
+# Checklist manuelle Phase 4 IA
+
+- [ ] Rejouer la validation complète du dataset sans timeout
+- [ ] Vérifier licences et provenance de toutes les sources
+- [ ] Inventorier et compléter les hard negatives industriels
+- [ ] Vérifier manuellement les splits par vidéo/scène/caméra
+- [ ] Installer un environnement GPU/CUDA compatible et le consigner
+- [ ] Exécuter un smoke training et inspecter les losses
+- [ ] Exécuter le training complet et conserver `best.pt`/`last.pt`
+- [ ] Évaluer le Test Set indépendant et les métriques par classe
+- [ ] Examiner confusion matrix, faux positifs et faux négatifs
+- [ ] Mesurer faux positifs/heure/caméra sur vidéos usine annotées
+- [ ] Mesurer délai de détection/confirmation, latence P50/P95 et FPS
+- [ ] Tester jour/nuit, fumée légère, vapeur, poussière, soudure et reflets
+- [ ] Comparer PT/ONNX sur le matériel Edge cible
+- [ ] Tester webcam et RTSP réel, coupure et reconnexion
+- [ ] Tester saturation disque et politique de rétention offline/snapshots
+- [ ] Tester heartbeat, retry et déduplication contre Laravel réel
+- [ ] Vérifier que les snapshots restent privés et tenant-scoped
+- [ ] Tester révocation/rotation du token sur un Edge Agent réel
+- [ ] Installer pytest et exécuter les suites Python demandées
+- [ ] Effectuer une revue sécurité des dépendances Python
+- [ ] Valider la procédure de rollback et de désactivation du modèle
+- [ ] Obtenir l'acceptation humaine « pilot only » avant tout déploiement
