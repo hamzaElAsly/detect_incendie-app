@@ -1,0 +1,4 @@
+cameras:
+  - camera_id: replace-with-laravel-camera-ulid
+    source: rtsp://user:password@192.0.2.10/stream
+    source_type: rtsp

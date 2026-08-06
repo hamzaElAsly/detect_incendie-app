@@ -3,5 +3,9 @@
 __pycache__/
 .pytest_cache/
 storage/queue/*.db
+storage/queue/*.sqlite3
+storage/queue/*.sqlite3-*
 storage/snapshots/*
 !storage/snapshots/.gitkeep
+storage/logs/*
+!storage/logs/.gitkeep

@@ -1,0 +1,5 @@
+source_type: rtsp
+inference_fps: 5
+model_image_size: 640
+thresholds: {fire: 0.60, smoke: 0.55}
+temporal: {minimum_positive_frames: 3, confirmation_window_seconds: 3, cooldown_seconds: 30, end_timeout_seconds: 10}

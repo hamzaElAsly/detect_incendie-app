@@ -1,0 +1,17 @@
+[Unit]
+Description=Detect Incendie Edge Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/detect-incendie/edge-agent
+EnvironmentFile=/opt/detect-incendie/edge-agent/.env
+ExecStart=/opt/detect-incendie/edge-agent/.venv/bin/python -m src.main
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

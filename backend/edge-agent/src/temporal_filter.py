@@ -39,6 +39,16 @@ class TemporalDetectionFilter:
         self._confirmed_at: dict[str, float] = {}
         self._last_positive: dict[str, float] = {}
 
+    def reset(self, class_name: str | None = None) -> None:
+        if class_name is None:
+            self._positives.clear()
+            self._confirmed_at.clear()
+            self._last_positive.clear()
+            return
+        self._positives.pop(class_name, None)
+        self._confirmed_at.pop(class_name, None)
+        self._last_positive.pop(class_name, None)
+
     def observe(self, class_name: str, confidence: float, observed_at: float | None = None) -> FilterResult:
         now = observed_at if observed_at is not None else time.monotonic()
         if class_name not in self.thresholds or confidence < self.thresholds[class_name]:

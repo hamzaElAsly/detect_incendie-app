@@ -284,12 +284,22 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 
 ## Phase 5 — Edge Agent
 
-- [ ] Flux RTSP
-- [ ] Heartbeat
-- [ ] Détections
-- [ ] Upload Snapshot
-- [ ] Buffer local
-- [ ] Reconnexion
+- [x] Flux RTSP/webcam/fichier implémenté et couvert par tests simulés
+- [x] Heartbeat Laravel non bloquant implémenté
+- [x] Pipeline de détection et idempotence implémentés
+- [x] Upload multipart et cycle de vie Snapshot implémentés
+- [x] Buffer local SQLite WAL avec reprise après crash implémenté
+- [x] Reconnexion avec backoff et jitter implémentée
+- [ ] Validation sur caméra RTSP réelle
+- [ ] Validation caméra → Edge → API sur environnement réel
+- [ ] Validation métier avec modèle spécialisé `best.pt`
+
+### Validation technique Phase 5 — 4 août 2026
+
+- 50 tests Python réussis via `unittest`, incluant reconnexion, reprise offline, multipart HTTP local et pipeline dry-run.
+- 58 tests Laravel réussis, 379 assertions; isolation tenant et authentification inchangées.
+- Aucun modèle spécialisé ni flux caméra réel disponible : aucune validation réelle ou métier n’est revendiquée.
+- Rapport détaillé : `PHASE_5_EDGE_AGENT_REPORT.md`.
 
 ## Phase 6 — Dashboard temps réel
 
