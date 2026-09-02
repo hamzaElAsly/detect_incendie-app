@@ -19,6 +19,7 @@ class EdgeDetectionRequest extends FormRequest
             'event_uuid' => ['required', 'uuid'],
             'detected_at' => ['required', 'date', 'before_or_equal:'.now()->addMinute()->toIso8601String(), 'after_or_equal:'.now()->subMinutes(5)->toIso8601String()],
             'class' => ['required', Rule::in(['fire', 'smoke'])],
+            'class_id' => ['required', 'integer', Rule::in([0, 1])],
             'confidence' => ['required', 'numeric', 'between:0,1'],
             'bounding_box' => ['required', 'array:x,y,width,height'],
             'bounding_box.x' => ['required', 'numeric', 'between:0,1'],
@@ -48,6 +49,13 @@ class EdgeDetectionRequest extends FormRequest
         if ((float) $box['x'] + (float) $box['width'] > 1 || (float) $box['y'] + (float) $box['height'] > 1) {
             throw ValidationException::withMessages([
                 'bounding_box' => 'The normalized bounding box must remain inside the frame.',
+            ]);
+        }
+
+        $expectedClassId = ['fire' => 0, 'smoke' => 1][$this->validated('class')];
+        if ((int) $this->validated('class_id') !== $expectedClassId) {
+            throw ValidationException::withMessages([
+                'class_id' => 'The class_id must match the fire/smoke model mapping.',
             ]);
         }
     }

@@ -15,26 +15,33 @@ from src.model_loader import ModelLoader
 class RuntimeServiceTests(unittest.TestCase):
     def test_same_class_boxes_count_as_one_observation_source(self):
         detections = [
-            Detection("fire", .7, {"x": 0., "y": 0., "width": .2, "height": .2}, 1),
-            Detection("fire", .9, {"x": .1, "y": .1, "width": .2, "height": .2}, 1),
-            Detection("smoke", .8, {"x": .2, "y": .2, "width": .2, "height": .2}, 1),
+            Detection("fire", 0, .7, {"x": 0., "y": 0., "width": .2, "height": .2}, 1),
+            Detection("fire", 0, .9, {"x": .1, "y": .1, "width": .2, "height": .2}, 1),
+            Detection("smoke", 1, .8, {"x": .2, "y": .2, "width": .2, "height": .2}, 1),
         ]
         selected = best_detections_by_class(detections)
         self.assertEqual(len(selected), 2)
         self.assertEqual(next(d for d in selected if d.class_name == "fire").confidence, .9)
 
     def test_event_factory_creates_stable_uuid4_contract_without_factory(self):
-        detection = Detection("fire", .94, {"x": .1, "y": .2, "width": .3, "height": .4}, 12.5)
-        event = create_event(detection, 1920, 1080, "fire-smoke-yolo", "v1", 3)
+        detection = Detection("fire", 0, .94, {"x": .1, "y": .2, "width": .3, "height": .4}, 12.5)
+        event = create_event(detection, 1920, 1080, "fire-smoke-yolo", "v2", 3)
         self.assertEqual(uuid.UUID(event.event_uuid).version, 4)
         self.assertEqual(event.payload["event_uuid"], event.event_uuid)
+        self.assertEqual(event.payload["class_id"], 0)
+        self.assertEqual(event.payload["model_version"], "v2")
         self.assertNotIn("factory_id", event.payload)
         self.assertTrue(event.payload["detected_at"].endswith("Z"))
 
     def test_event_factory_rejects_invalid_normalized_detection(self):
-        invalid = Detection("flame", 1.2, {"x": .9, "y": .2, "width": .2, "height": .2}, 1)
+        invalid = Detection("flame", 9, 1.2, {"x": .9, "y": .2, "width": .2, "height": .2}, 1)
         with self.assertRaises(EventFactoryError):
             create_event(invalid, 1920, 1080, "fire-smoke-yolo", "v1", 3)
+
+    def test_event_factory_rejects_class_id_mapping_mismatch(self):
+        invalid = Detection("smoke", 0, .8, {"x": .1, "y": .2, "width": .3, "height": .4}, 1)
+        with self.assertRaises(EventFactoryError):
+            create_event(invalid, 1920, 1080, "fire-smoke-yolo", "v2", 3)
 
     def test_mock_model_is_never_business_validated(self):
         loader = ModelLoader(None, mock=True, business_validated=True)

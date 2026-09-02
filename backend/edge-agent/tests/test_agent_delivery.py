@@ -48,7 +48,7 @@ class AgentDeliveryTests(unittest.TestCase):
             health = HealthState(state=StreamState.ONLINE)
             stream = Mock(health=health, _resolution=(64, 48))
             stream.results.return_value = iter([FrameResult(frame, 1, 64, 48) for _ in range(3)])
-            detection = Detection("fire", .95, {"x": .1, "y": .2, "width": .3, "height": .4}, 1)
+            detection = Detection("fire", 0, .95, {"x": .1, "y": .2, "width": .3, "height": .4}, 1)
             detector = Mock(); detector.predict.return_value = [detection, detection]
             detector.loader.info = SimpleNamespace(name="mock-detector", version="mock", business_validated=False)
             agent = EdgeAgent.__new__(EdgeAgent)

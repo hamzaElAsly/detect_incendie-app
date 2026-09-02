@@ -3,10 +3,12 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .streamlit/
+fire_factory_dataset_clean_20260823/
+fire_factory_dataset_v2/
+Python/configs/yolo_experiments.json
 .env
 logs/*.log
 storage/detections/*.jpg
 .idea/
 .vscode/
 .agents
-# fire_factory_dataset/

@@ -32,6 +32,7 @@ class Phase4EdgeDetectionTest extends TestCase
         $this->assertSame($factory->id, $event->factory_id);
         $this->assertSame($camera->id, $event->camera_id);
         $this->assertSame('fire-smoke-yolo', $event->metadata['model_name']);
+        $this->assertSame(0, $event->metadata['class_id']);
         $this->assertDatabaseHas('fire_event_detections', ['fire_event_id' => $event->id, 'class_name' => 'fire']);
         $this->assertDatabaseHas('alerts', ['fire_event_id' => $event->id, 'status' => 'pending']);
         $this->assertDatabaseHas('audit_logs', ['factory_id' => $factory->id, 'action' => 'fire_event.created.edge']);
@@ -85,6 +86,7 @@ class Phase4EdgeDetectionTest extends TestCase
         [, $camera, $token] = $this->edgeContext();
         $cases = [
             ['class' => 'flame'],
+            ['class_id' => 1],
             ['confidence' => 1.01],
             ['bounding_box' => ['x' => .9, 'y' => .2, 'width' => .2, 'height' => .2]],
             ['detected_at' => now()->subMinutes(6)->toIso8601String()],
@@ -142,12 +144,13 @@ class Phase4EdgeDetectionTest extends TestCase
             'event_uuid' => $uuid ?? (string) Str::uuid(),
             'detected_at' => now()->toIso8601String(),
             'class' => 'fire',
+            'class_id' => 0,
             'confidence' => .94,
             'bounding_box' => ['x' => .24, 'y' => .31, 'width' => .18, 'height' => .22],
             'frame_width' => 1920,
             'frame_height' => 1080,
             'model_name' => 'fire-smoke-yolo',
-            'model_version' => 'v1',
+            'model_version' => 'v2',
             'inference_ms' => 32.4,
             'confirmation_frames' => 5,
         ];

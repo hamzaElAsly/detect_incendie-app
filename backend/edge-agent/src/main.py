@@ -42,7 +42,9 @@ class EdgeAgent:
         self.detector = InferenceService(settings.model_path, settings.device, settings.model_image_size,
             settings.mock_detector, warmup=settings.model_warmup,
             business_validated=settings.model_business_validated,
-            allow_generic=settings.allow_generic_model)
+            allow_generic=settings.allow_generic_model,
+            model_version=settings.model_version,
+            confidence_floor=min(settings.fire_threshold, settings.smoke_threshold))
         self.temporal = TemporalDetectionFilter({"fire": settings.fire_threshold, "smoke": settings.smoke_threshold},
             settings.minimum_positive_frames, settings.confirmation_window_seconds,
             settings.cooldown_seconds, settings.end_timeout_seconds)
@@ -54,8 +56,9 @@ class EdgeAgent:
         self._stopped = False
 
     def run(self) -> None:
-        logger.info("agent_start agent_id=%s dry_run=%s mock_detector=%s model_business_validated=%s",
+        logger.info("agent_start agent_id=%s dry_run=%s mock_detector=%s model=%s model_version=%s model_business_validated=%s",
                     self.settings.agent_id, self.settings.dry_run, self.settings.mock_detector,
+                    self.detector.loader.info.name, self.detector.loader.info.version,
                     self.detector.loader.info.business_validated)
         if not self.settings.dry_run:
             self.heartbeat.start()

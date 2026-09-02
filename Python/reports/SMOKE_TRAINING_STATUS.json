@@ -1,0 +1,13 @@
+{
+  "passed": false,
+  "status": "incomplete",
+  "model": "yolo11s.pt",
+  "device": "cpu",
+  "requested_epochs": 2,
+  "completed_epochs": 0,
+  "observed_progress": "epoch 1, batch 2/3597",
+  "verifier_passed": false,
+  "missing_artifacts": ["results.csv", "best.pt", "last.pt"],
+  "reason": "The CPU smoke run was interrupted before epoch completion because the measured runtime projected multiple days for the required gate.",
+  "full_training_allowed": false
+}

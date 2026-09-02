@@ -33,6 +33,16 @@ class TemporalFilterTests(unittest.TestCase):
         self.filter.reset()
         self.assertEqual(self.filter.observe("fire", .95, 3).positive_frames, 1)
 
+    def test_fire_threshold_filtering_is_class_specific(self):
+        detection_filter = TemporalDetectionFilter({"fire": .30, "smoke": .70}, 1, 5, 10, 6)
+        self.assertEqual(detection_filter.observe("fire", .29, 1).state, DetectionState.REJECTED)
+        self.assertEqual(detection_filter.observe("fire", .30, 2).state, DetectionState.CONFIRMED)
+
+    def test_smoke_threshold_filtering_is_class_specific(self):
+        detection_filter = TemporalDetectionFilter({"fire": .70, "smoke": .30}, 1, 5, 10, 6)
+        self.assertEqual(detection_filter.observe("smoke", .29, 1).state, DetectionState.REJECTED)
+        self.assertEqual(detection_filter.observe("smoke", .30, 2).state, DetectionState.CONFIRMED)
+
     def test_event_end_then_new_event(self):
         for observed_at in (1, 2): self.filter.observe("fire", .95, observed_at)
         self.assertEqual(self.filter.observe("fire", .95, 3).state, DetectionState.CONFIRMED)

@@ -1,0 +1,25 @@
+{
+  "valid": true,
+  "dataset": "fire_factory_dataset_clean_20260823",
+  "seed": 20260713,
+  "classes": {"0": "fire", "1": "smoke"},
+  "counts": {
+    "train": {"images": 14411, "labels": 14411, "positive": 11552, "negative": 2859, "boxes": {"0": 19534, "1": 6951}, "invalid": 0},
+    "val": {"images": 2812, "labels": 2812, "positive": 2812, "negative": 0, "boxes": {"0": 473, "1": 3848}, "invalid": 0},
+    "test": {"images": 3086, "labels": 3086, "positive": 2644, "negative": 442, "boxes": {"0": 1733, "1": 2347}, "invalid": 0}
+  },
+  "errors": [],
+  "warnings": ["aucun hard negative explicitement documente", "dataset derive utilise car les ACL empechent la reecriture des 70 JPEG originaux"],
+  "mapping": {"0": "fire", "1": "smoke"},
+  "image_integrity": {"train_checked": 14411, "train_corrupt": 0, "val_checked": 2812, "val_corrupt": 0, "test_checked": 3086, "test_corrupt": 0, "repaired_jpegs": 70, "originals_backed_up": 70},
+  "critical_leaks": 0,
+  "quasi_pairs_grouped": 373,
+  "quasi_definition": "pHash<=4, gray_RMSE<=8, color_RMSE<=12, gray_std>=15",
+  "source_assets": 20568,
+  "excluded_assets": 259,
+  "original_invalid_annotations": 331,
+  "licenses": "present in active sources metadata",
+  "remaining_invalid_annotations": 0,
+  "remaining_unpaired_files": 0,
+  "sanity_training_ready": true
+}

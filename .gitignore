@@ -1,1 +1,8 @@
 .agents
+Python/fire_factory_dataset_clean_20260823/
+Python/fire_factory_dataset_v2/
+Python/configs/yolo_experiments.json
+Python/fire_factory_dataset_clean_20260823.zip
+Python/fire_factory_dataset_clean_20260823/
+Python/fire_factory_dataset_v2/
+Python/*.zip

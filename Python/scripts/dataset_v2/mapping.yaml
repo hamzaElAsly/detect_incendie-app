@@ -1,0 +1,51 @@
+version: 1
+seed: 20260827
+final_classes:
+  0: fire
+  1: smoke
+empty_label_policy:
+  source_roboflow_Fire_Smoke: manual_review
+  source_roboflow_indoor: manual_review
+sources:
+  source_roboflow_Fire_Smoke:
+    "0":
+      name: fire
+      decision: map
+      final_class: 0
+      reason: source YAML identifies genuine fire
+    "1":
+      name: smoke
+      decision: map
+      final_class: 1
+      reason: source YAML identifies smoke
+  source_roboflow_indoor:
+    "0":
+      name: Bat lua
+      decision: manual_review
+      final_class: null
+      reason: lighter class is visually ambiguous and is not silently converted
+    "1":
+      name: Candle
+      decision: manual_review
+      final_class: null
+      reason: candle class is not automatically treated as target fire
+    "2":
+      name: big-fire
+      decision: map
+      final_class: 0
+      reason: explicit genuine fire class
+    "3":
+      name: fake-fire
+      decision: hard_negative
+      final_class: null
+      reason: explicit non-target fake-fire candidate retained as hard negative
+    "4":
+      name: small-fire
+      decision: map
+      final_class: 0
+      reason: explicit genuine fire class
+    "5":
+      name: smoke
+      decision: map
+      final_class: 1
+      reason: source YAML identifies smoke

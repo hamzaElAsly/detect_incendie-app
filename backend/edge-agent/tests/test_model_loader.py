@@ -10,9 +10,24 @@ from src.model_loader import ModelLoader
 
 
 class FakeModel:
-    def __init__(self, names):
+    def __init__(self, names, boxes=None):
         self.names = names
-        self.predict = Mock(return_value=[SimpleNamespace(boxes=[], names=names)])
+        self.predict = Mock(return_value=[SimpleNamespace(boxes=boxes or [], names=names)])
+
+
+class FakeTensorValue:
+    def __init__(self, value):
+        self.value = value
+
+    def item(self):
+        return self.value
+
+
+class FakeBox:
+    def __init__(self, class_id, confidence, xyxy):
+        self.cls = FakeTensorValue(class_id)
+        self.conf = FakeTensorValue(confidence)
+        self.xyxy = [SimpleNamespace(tolist=lambda: xyxy)]
 
 
 class ModelLoaderTests(unittest.TestCase):
@@ -23,15 +38,36 @@ class ModelLoaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             model = FakeModel({0: "fire", 1: "smoke"}); yolo = Mock(return_value=model)
             with patch.dict(sys.modules, {"ultralytics": SimpleNamespace(YOLO=yolo)}):
-                loader = ModelLoader(self.weight(directory))
+                loader = ModelLoader(self.weight(directory), model_version="v2")
                 self.assertIs(loader.load(), loader.load()); loader.warm_up(32)
             yolo.assert_called_once(); model.predict.assert_called_once()
+            self.assertEqual(loader.info.version, "v2")
 
     def test_unexpected_classes_are_rejected_by_default(self):
         with tempfile.TemporaryDirectory() as directory:
             model = FakeModel({0: "person"})
             with patch.dict(sys.modules, {"ultralytics": SimpleNamespace(YOLO=lambda _: model)}):
-                with self.assertRaises(ValueError): ModelLoader(self.weight(directory)).load()
+                with self.assertRaisesRegex(ValueError, "classes incompatible"): ModelLoader(self.weight(directory)).load()
+
+    def test_missing_model_path_fails_explicitly(self):
+        with tempfile.TemporaryDirectory() as directory:
+            missing = Path(directory) / "missing.pt"
+            with self.assertRaisesRegex(ValueError, "YOLO model file not found"):
+                ModelLoader(missing).load()
+
+    def test_inference_preserves_class_mapping_confidence_and_bbox(self):
+        with tempfile.TemporaryDirectory() as directory:
+            box = FakeBox(1, .42, [10, 20, 50, 80])
+            model = FakeModel({0: "fire", 1: "smoke"}, [box])
+            with patch.dict(sys.modules, {"ultralytics": SimpleNamespace(YOLO=lambda _: model)}):
+                service = InferenceService(self.weight(directory), confidence_floor=.30)
+            detections = service.predict(SimpleNamespace(shape=(100, 200, 3)))
+            self.assertEqual(len(detections), 1)
+            self.assertEqual(detections[0].class_name, "smoke")
+            self.assertEqual(detections[0].class_id, 1)
+            self.assertAlmostEqual(detections[0].confidence, .42)
+            self.assertEqual(detections[0].bounding_box, {"x": .05, "y": .2, "width": .2, "height": .6})
+            self.assertEqual(model.predict.call_args.kwargs["conf"], .30)
 
     def test_generic_weights_are_technical_only(self):
         with tempfile.TemporaryDirectory() as directory:

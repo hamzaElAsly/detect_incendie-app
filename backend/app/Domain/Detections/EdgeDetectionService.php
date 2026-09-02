@@ -47,6 +47,7 @@ class EdgeDetectionService
                     'api_client_id' => $client->id,
                     'model_name' => $data['model_name'],
                     'model_version' => $data['model_version'],
+                    'class_id' => $data['class_id'],
                     'frame_width' => $data['frame_width'],
                     'frame_height' => $data['frame_height'],
                     'inference_ms' => (float) $data['inference_ms'],

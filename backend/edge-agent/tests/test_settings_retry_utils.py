@@ -14,8 +14,26 @@ class SettingsRetryUtilsTests(unittest.TestCase):
             self.assertFalse(settings.model_business_validated)
 
     def test_invalid_threshold_is_rejected(self):
-        with patch.dict(os.environ, {"EDGE_FIRE_THRESHOLD": "1.1"}, clear=True):
+        with patch.dict(os.environ, {"FIRE_CONF_THRESHOLD": "1.1"}, clear=True):
             with self.assertRaises(ValueError): EdgeSettings()
+
+    def test_v2_model_path_version_and_threshold_env_are_supported(self):
+        env = {
+            "EDGE_AGENT_ID": "agent",
+            "EDGE_SOURCE": "0",
+            "EDGE_SOURCE_TYPE": "webcam",
+            "YOLO_MODEL_PATH": "Python/models/fire_smoke_v2/best.pt",
+            "YOLO_MODEL_VERSION": "v2",
+            "FIRE_CONF_THRESHOLD": "0.30",
+            "SMOKE_CONF_THRESHOLD": "0.31",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            settings = EdgeSettings()
+            self.assertTrue(settings.model_path.is_file())
+            self.assertEqual(settings.model_path.name, "best.pt")
+            self.assertEqual(settings.model_version, "v2")
+            self.assertEqual(settings.fire_threshold, .30)
+            self.assertEqual(settings.smoke_threshold, .31)
 
     def test_url_credentials_are_redacted(self):
         value = redact_url("rtsp://user:password@camera.local:554/live")

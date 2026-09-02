@@ -10,11 +10,20 @@ import math
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = ROOT.parents[1]
 load_dotenv(ROOT / ".env")
 
 
 def _text(name: str, default: str = "") -> str:
     return os.getenv(name, default).strip()
+
+
+def _text_any(names: tuple[str, ...], default: str = "") -> str:
+    for name in names:
+        value = os.getenv(name)
+        if value is not None and value.strip() != "":
+            return value.strip()
+    return default.strip()
 
 
 def _bool(name: str, default: bool) -> bool:
@@ -45,9 +54,27 @@ def _threshold(name: str, default: float) -> float:
     return value
 
 
+def _threshold_any(names: tuple[str, ...], default: float) -> float:
+    active = next((name for name in names if os.getenv(name) is not None and os.getenv(name, "").strip() != ""), names[0])
+    value = float(os.getenv(active, str(default)).strip())
+    if not math.isfinite(value) or value < 0 or value > 1:
+        raise ValueError(f"{active} must be between 0 and 1")
+    return value
+
+
 def _path(name: str, default: str) -> Path:
     value = Path(_text(name, default))
     return value if value.is_absolute() else ROOT / value
+
+
+def _path_any(names: tuple[str, ...], default: str) -> Path:
+    value = Path(_text_any(names, default))
+    if value.is_absolute():
+        return value
+    project_candidate = PROJECT_ROOT / value
+    if project_candidate.exists() or value.parts[:1] in {("Python",), ("backend",)}:
+        return project_candidate
+    return ROOT / value
 
 
 @dataclass(frozen=True)
@@ -58,7 +85,8 @@ class EdgeSettings:
     camera_id: str = field(default_factory=lambda: _text("EDGE_CAMERA_ID"))
     source: str = field(default_factory=lambda: _text("EDGE_SOURCE"))
     source_type: str = field(default_factory=lambda: _text("EDGE_SOURCE_TYPE", "rtsp").lower())
-    model_path: Path = field(default_factory=lambda: _path("EDGE_MODEL_PATH", "models/best.pt"))
+    model_path: Path = field(default_factory=lambda: _path_any(("YOLO_MODEL_PATH", "EDGE_MODEL_PATH"), "Python/models/fire_smoke_v2/best.pt"))
+    model_version: str = field(default_factory=lambda: _text_any(("YOLO_MODEL_VERSION", "EDGE_MODEL_VERSION"), "v2"))
     device: str = field(default_factory=lambda: _text("EDGE_DEVICE", "cpu").lower())
     verify_tls: bool = field(default_factory=lambda: _bool("EDGE_VERIFY_TLS", True))
     heartbeat_interval_seconds: int = field(default_factory=lambda: _int("EDGE_HEARTBEAT_INTERVAL_SECONDS", 30))
@@ -67,8 +95,8 @@ class EdgeSettings:
     frame_width: int | None = field(default_factory=lambda: int(_text("EDGE_FRAME_WIDTH")) if _text("EDGE_FRAME_WIDTH") else None)
     frame_height: int | None = field(default_factory=lambda: int(_text("EDGE_FRAME_HEIGHT")) if _text("EDGE_FRAME_HEIGHT") else None)
     model_image_size: int = field(default_factory=lambda: _int("EDGE_MODEL_IMAGE_SIZE", 640))
-    fire_threshold: float = field(default_factory=lambda: _threshold("EDGE_FIRE_THRESHOLD", .60))
-    smoke_threshold: float = field(default_factory=lambda: _threshold("EDGE_SMOKE_THRESHOLD", .55))
+    fire_threshold: float = field(default_factory=lambda: _threshold_any(("FIRE_CONF_THRESHOLD", "EDGE_FIRE_THRESHOLD"), .30))
+    smoke_threshold: float = field(default_factory=lambda: _threshold_any(("SMOKE_CONF_THRESHOLD", "EDGE_SMOKE_THRESHOLD"), .30))
     minimum_positive_frames: int = field(default_factory=lambda: _int("EDGE_MIN_POSITIVE_FRAMES", 3))
     confirmation_window_seconds: float = field(default_factory=lambda: _float("EDGE_CONFIRMATION_WINDOW_SECONDS", 3, .01))
     cooldown_seconds: float = field(default_factory=lambda: _float("EDGE_EVENT_COOLDOWN_SECONDS", 30))
@@ -124,9 +152,11 @@ class EdgeSettings:
         if self.reconnect_initial_seconds > self.reconnect_max_seconds:
             raise ValueError("Reconnect initial delay cannot exceed maximum")
         if not self.mock_detector and not self.model_path.is_file():
-            raise ValueError(f"Model not found: {self.model_path}")
+            raise ValueError(f"YOLO model file not found: {self.model_path}")
         if not self.mock_detector and self.model_path.suffix.lower() != ".pt":
-            raise ValueError("EDGE_MODEL_PATH must reference a .pt file")
+            raise ValueError("YOLO_MODEL_PATH must reference a .pt file")
+        if not re.fullmatch(r"[A-Za-z0-9._-]{1,100}", self.model_version):
+            raise ValueError("YOLO_MODEL_VERSION must match /^[A-Za-z0-9._-]{1,100}$/")
         if self.model_business_validated and (self.mock_detector or self.model_path.name != "best.pt"):
             raise ValueError("Business validation requires a specialized best.pt and cannot be used with mock mode")
         if self.allow_generic_model and not self.dry_run:

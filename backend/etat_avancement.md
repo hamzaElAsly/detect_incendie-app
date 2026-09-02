@@ -1,6 +1,6 @@
 # État d'avancement — Plateforme Detect Incendie SaaS
 
-*Dernière mise à jour : 29 juillet 2026*
+*Dernière mise à jour : 23 août 2026*
 
 ## Vue d'ensemble
 
@@ -264,14 +264,16 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 - [ ] Évaluer les performances
 - [ ] Intégrer le modèle
 
-### Validation Phase 4 — 29 juillet 2026
+### Validation Phase 4 — 23 août 2026
 
-- Dataset trouvé : 20 309 images, 20 309 labels, classes `fire` et `smoke`
+- Dataset trouvé : 20 309 images, 20 309 labels, classes `fire` et `smoke`; dérivé propre utilisé pour l'entraînement après sauvegarde de 70 JPEG originaux non réinscriptibles
 - Splits présents : 14 411 train, 2 812 validation, 3 086 test
-- Artefact de validation antérieur valide; revalidation courante à rejouer sans timeout
-- Environnement : Python 3.12.10, PyTorch 2.13.0 CPU, Ultralytics 8.4.95, CUDA absent
+- Validation courante : 0 annotation invalide, 0 fichier non apparié, 0 image corrompue dans le dérivé; mapping `0=fire`, `1=smoke`
+- Environnement : Python 3.12.10 dans `.venv`, PyTorch 2.13.0 CPU, Torchvision 0.28.0 CPU, Ultralytics 8.4.95, CUDA absent
 - Poids génériques YOLO11 présents; aucun `best.pt`/`last.pt` spécialisé
-- Entraînement complet et évaluation indépendante non exécutés
+- Smoke test YOLO11s CPU démarré mais interrompu avant la fin de la première epoch après observation de 2/3597 batches; aucune métrique ni poids produits
+- Entraînement complet et évaluation indépendante non exécutés; le CPU observé projette plusieurs dizaines d'heures pour un smoke complet et ne justifie pas un lancement automatique de 100 epochs
+- Garde d'entraînement active : le pipeline refuse tout Full Training sans `reports/SMOKE_TRAINING_PASS.json` attestant un smoke réussi
 - Edge Agent Laravel préparé avec filtrage temporel et file offline
 - API Laravel de détection intégrée avec scope, tenant, idempotence, audit et snapshot privé
 - Tests rapides Edge : 6 réussis via `unittest`; pytest absent

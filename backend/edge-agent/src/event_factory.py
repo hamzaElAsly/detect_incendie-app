@@ -23,6 +23,9 @@ def create_event(detection: Detection, frame_width: int, frame_height: int,
                  model_name: str, model_version: str, confirmation_frames: int) -> EdgeEvent:
     if detection.class_name not in {"fire", "smoke"}:
         raise EventFactoryError("Detection class must be fire or smoke")
+    expected_class_id = {"fire": 0, "smoke": 1}[detection.class_name]
+    if detection.class_id != expected_class_id:
+        raise EventFactoryError("Detection class_id does not match the fire/smoke model mapping")
     if not math.isfinite(detection.confidence) or not 0 <= detection.confidence <= 1:
         raise EventFactoryError("Detection confidence must be between 0 and 1")
     box = detection.bounding_box
@@ -41,7 +44,7 @@ def create_event(detection: Detection, frame_width: int, frame_height: int,
     event_uuid = str(uuid.uuid4())
     payload = {
         "event_uuid": event_uuid, "detected_at": utc_now(), "class": detection.class_name,
-        "confidence": detection.confidence, "bounding_box": box,
+        "class_id": detection.class_id, "confidence": detection.confidence, "bounding_box": box,
         "frame_width": frame_width, "frame_height": frame_height,
         "model_name": model_name, "model_version": model_version,
         "inference_ms": detection.inference_ms, "confirmation_frames": confirmation_frames,

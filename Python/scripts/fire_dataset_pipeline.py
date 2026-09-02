@@ -362,13 +362,42 @@ def validate(dataset: Path) -> dict[str, object]:
             "counts": counts, "errors": errors, "warnings": warnings}
 
 
+def persist_validation_reports(result: dict[str, object]) -> str:
+    """Persist compatibility/current reports when the workspace permits it.
+
+    Validation remains useful in restricted Windows sandboxes where a report
+    directory may be readable but not writable by the launched interpreter.
+    """
+    serialized = json.dumps(result, ensure_ascii=False, indent=2)
+    report_dir = ROOT / "reports"
+    try:
+        report_dir.mkdir(parents=True, exist_ok=True)
+        for filename in ("DATASET_VALIDATION.json", "DATASET_VALIDATION_CURRENT.json"):
+            try:
+                (report_dir / filename).write_text(serialized, encoding="utf-8")
+            except PermissionError:
+                pass
+    except PermissionError:
+        pass
+    return serialized
+
+
 def train(dataset: Path, experiments_path: Path) -> None:
     result = validate(dataset)
     report = ROOT / "reports" / "DATASET_VALIDATION.json"
-    report.parent.mkdir(parents=True, exist_ok=True)
-    report.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    persist_validation_reports(result)
     if not result["valid"]:
         raise SystemExit(f"Dataset invalide: entraînement refusé. Voir {report}")
+    smoke_gate = ROOT / "reports" / "SMOKE_TRAINING_PASS.json"
+    try:
+        smoke_status = json.loads(smoke_gate.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, PermissionError):
+        smoke_status = {}
+    if smoke_status.get("passed") is not True:
+        raise SystemExit(
+            "Full training refused: a completed 2-epoch smoke test must be "
+            "attested in reports/SMOKE_TRAINING_PASS.json"
+        )
     config = json.loads(experiments_path.read_text(encoding="utf-8"))
     if not all(model.get("weights", "").endswith(".pt") for model in config["models"]):
         raise ValueError("Chaque expérience doit partir de poids préentraînés .pt")
@@ -382,6 +411,9 @@ def train(dataset: Path, experiments_path: Path) -> None:
         args = dict(config["training"])
         args.update(data=str((dataset / "data.yaml").resolve()), seed=int(config["seed"]),
                     name=model_config["name"], pretrained=True)
+        if "project" in args:
+            project = Path(str(args["project"]))
+            args["project"] = str(project if project.is_absolute() else (ROOT / project).resolve())
         with run_log.open("a", encoding="utf-8") as stream:
             stream.write(json.dumps({"date": date.today().isoformat(), "weights": model_config["weights"],
                                      "arguments": args}, ensure_ascii=False) + "\n")
@@ -525,7 +557,7 @@ def main() -> None:
         init_metadata(dataset)
     elif args.command == "validate":
         result = validate(dataset)
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        print(persist_validation_reports(result))
         raise SystemExit(0 if result["valid"] else 2)
     elif args.command == "convert-d-fire":
         convert_d_fire(dataset, args.output.resolve())

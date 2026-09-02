@@ -1,21 +1,20 @@
 {
   "seed": 20260713,
-  "data": "fire_factory_dataset/data.yaml",
+  "data": "fire_factory_dataset_clean_20260823/data.yaml",
   "models": [
-    {"name": "small", "weights": "yolo11s.pt"},
-    {"name": "medium", "weights": "yolo11m.pt"},
-    {"name": "large", "weights": "yolo11l.pt"}
+    {"name": "baseline_yolo11n_cpu", "weights": "yolo11n.pt"}
   ],
   "training": {
     "epochs": 100,
     "imgsz": 640,
-    "batch": 16,
+    "batch": 4,
     "patience": 20,
-    "device": "auto",
-    "workers": 4,
+    "device": "cpu",
+    "workers": 0,
     "pretrained": true,
     "deterministic": true,
-    "project": "runs/fire_factory"
+    "project": "runs/fire_factory",
+    "resume": false
   },
   "selection": {
     "primary_metric": "map50_95",
