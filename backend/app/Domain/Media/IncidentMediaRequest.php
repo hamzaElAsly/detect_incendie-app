@@ -8,7 +8,7 @@ class IncidentMediaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $factory = $this->route('factory');
+        $factory = $this->attributes->get('factory');
         $event = $this->route('event');
 
         return $factory

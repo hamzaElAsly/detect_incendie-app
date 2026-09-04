@@ -1,5 +1,4 @@
 """API FastAPI de prédiction et de gestion des événements."""
-import base64
 from contextlib import asynccontextmanager
 from datetime import datetime
 import io
@@ -92,17 +91,18 @@ async def predict(image: UploadFile = File(...)):
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         raise HTTPException(400, "Invalid or corrupted image") from exc
     result = get_fire_detection_service().predict_pil(pil_image)
-    if result["is_fire"] and result["confidence"] >= 0.85:
-        status, message = "fire_detected", "Incendie détecté avec forte certitude !"
-    elif result["is_fire"]:
-        status, message = "risk", "Risque d'incendie détecté, vigilance recommandée."
+    if result["has_fire"] and result["has_smoke"]:
+        status, message = "fire_and_smoke_detected", "Feu et fumée détectés."
+    elif result["has_fire"]:
+        status, message = "fire_detected", "Feu détecté."
+    elif result["has_smoke"]:
+        status, message = "smoke_detected", "Fumée détectée."
     else:
-        status, message = "no_fire", "Probabilité faible d'incendie, situation normale."
-    buffered = io.BytesIO(); pil_image.save(buffered, format="PNG")
-    return {"success": True, "prediction": "Fire" if result["is_fire"] else "No Fire",
-            "confidence": round(result["confidence"], 4), "status": status, "message": message,
-            "predicted_index": result["predicted_index"], "probabilities": result["probabilities"],
-            "image": "data:image/png;base64," + base64.b64encode(buffered.getvalue()).decode()}
+        status, message = "no_detection", "Aucune détection au-dessus du seuil."
+    return {"success": True, "has_detection": result["has_detection"],
+            "has_fire": result["has_fire"], "has_smoke": result["has_smoke"],
+            "max_confidence": round(result["max_confidence"], 4),
+            "detections": result["detections"], "status": status, "message": message}
 
 
 @app.get("/events", response_model=list[EventResponse])

@@ -8,7 +8,7 @@ class FactorySettingsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $factory = $this->route('factory');
+        $factory = $this->attributes->get('factory');
 
         return $factory && $this->user()?->hasPermission('settings.update', $factory);
     }

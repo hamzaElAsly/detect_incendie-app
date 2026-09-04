@@ -40,10 +40,11 @@ def _bool(name: str, default: str = "false") -> bool:
 
 @dataclass(frozen=True)
 class Settings:
-    fire_confidence_threshold: float = _float("FIRE_CONFIDENCE_THRESHOLD", "0.95")
+    fire_confidence_threshold: float = _float("FIRE_CONFIDENCE_THRESHOLD", "0.30")
     fire_event_threshold: float = _float(
-        "FIRE_EVENT_THRESHOLD", os.getenv("FIRE_CONFIDENCE_THRESHOLD", "0.95")
+        "FIRE_EVENT_THRESHOLD", os.getenv("FIRE_CONFIDENCE_THRESHOLD", "0.30")
     )
+    yolo_model_path: str = os.getenv("YOLO_MODEL_PATH", "Python/models/fire_smoke_v2/best.pt")
     detection_cooldown_seconds: int = _int("DETECTION_COOLDOWN_SECONDS", "15", 0)
     required_positive_frames: int = _int("REQUIRED_POSITIVE_FRAMES", "3")
     prediction_debug: bool = _bool("PREDICTION_DEBUG")

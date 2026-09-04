@@ -3,23 +3,22 @@
 namespace App\Actions\Auth;
 
 use App\Models\Factory;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class RegisterUser
 {
     public function execute(array $data): array
     {
         return DB::transaction(function () use ($data) {
-            $user = User::create(['name' => $data['name'], 'email' => $data['email'], 'password' => $data['password']]);
-            $base = Str::slug($data['factory_name']);
-            $slug = $base;
-            for ($i = 2; Factory::where('slug', $slug)->exists(); $i++) {
-                $slug = $base.'-'.$i;
-            }
-            $factory = Factory::create(['name' => $data['factory_name'], 'slug' => $slug]);
-            $factory->users()->attach($user, ['role' => 'factory_owner']);
+            $user = User::create(['name' => $data['name'], 'email' => $data['email'], 'password' => $data['password'], 'is_active' => true, 'status' => 'active']);
+            $factory = Factory::local();
+            $role = Role::firstOrCreate(['name' => 'factory_admin'], ['label' => 'Factory Admin', 'is_platform' => false]);
+            $factory->users()->syncWithoutDetaching([
+                $user->id => ['role' => $role->name, 'status' => 'active', 'joined_at' => now()],
+            ]);
+            $user->roles()->syncWithoutDetaching([$role->id => ['factory_id' => $factory->id]]);
 
             return [$user, $factory];
         });

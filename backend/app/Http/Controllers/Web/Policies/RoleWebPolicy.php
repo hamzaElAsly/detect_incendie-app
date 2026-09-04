@@ -24,6 +24,6 @@ class RoleWebPolicy
 
     public function update(User $u, Role $r): bool
     {
-        return $u->hasPermission('roles.manage') && ! in_array($r->name, ['super_admin', 'platform_admin'], true);
+        return $u->hasPermission('roles.manage') && $r->name !== 'system_admin';
     }
 }

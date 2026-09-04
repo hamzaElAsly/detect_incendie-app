@@ -9,17 +9,55 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Factory extends Model
 {
     use HasFactory, HasUlids;
 
-    protected $fillable = ['name', 'slug', 'reference', 'address', 'city', 'country', 'phone', 'email', 'timezone', 'status', 'owner_id', 'is_active', 'settings'];
+    protected $fillable = [
+        'name',
+        'legal_name',
+        'slug',
+        'reference',
+        'installation_identifier',
+        'address',
+        'city',
+        'country',
+        'phone',
+        'email',
+        'emergency_contact',
+        'timezone',
+        'status',
+        'owner_id',
+        'is_active',
+        'logo_path',
+        'latitude',
+        'longitude',
+        'internal_notes',
+        'settings',
+    ];
 
     protected function casts(): array
     {
-        return ['status' => RecordStatus::class, 'is_active' => 'boolean', 'settings' => 'array'];
+        return ['status' => RecordStatus::class, 'is_active' => 'boolean', 'latitude' => 'decimal:7', 'longitude' => 'decimal:7', 'settings' => 'array'];
+    }
+
+    public static function local(): self
+    {
+        return static::query()
+            ->where('is_active', true)
+            ->orderBy('created_at')
+            ->orderBy('name')
+            ->first()
+            ?? static::query()->orderBy('created_at')->orderBy('name')->first()
+            ?? static::query()->create([
+                'name' => config('app.name', 'Local Fire Detection Site'),
+                'slug' => 'local-installation',
+                'reference' => 'LOCAL-INSTALLATION',
+                'timezone' => config('app.timezone', 'UTC'),
+                'status' => 'active',
+                'is_active' => true,
+            ]);
     }
 
     public function users(): BelongsToMany
@@ -57,19 +95,6 @@ class Factory extends Model
     public function apiClients(): HasMany
     {
         return $this->hasMany(ApiClient::class);
-    }
-
-    public function subscriptions(): HasMany
-    {
-        return $this->hasMany(Subscription::class);
-    }
-
-    public function currentSubscription(): HasOne
-    {
-        return $this->hasOne(Subscription::class)
-            ->whereIn('status', ['trial', 'active'])
-            ->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>=', now()))
-            ->latestOfMany();
     }
 
     public function notifications(): HasMany

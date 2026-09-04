@@ -11,8 +11,8 @@ class GlobalUserController extends Controller
 {
     public function create(): View
     {
-        abort_unless(request()->user()->is_super_admin || request()->user()->hasRole('platform_admin'), 403);
-        $roles = Role::where('is_platform', true)->when(! request()->user()->is_super_admin, fn ($q) => $q->where('name', '!=', 'super_admin'))->orderBy('name')->get();
+        abort_unless(request()->user()->hasRole('system_admin'), 403);
+        $roles = Role::where('name', 'system_admin')->orderBy('name')->get();
 
         return view('users.create', compact('roles'));
     }

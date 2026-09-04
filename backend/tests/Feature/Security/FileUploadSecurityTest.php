@@ -86,7 +86,7 @@ class FileUploadSecurityTest extends TestCase
         $this->actingAs($owner)->withSession(['factory_id' => $factory->id])
             ->get(route('events.media', [$event, 'image']))->assertOk();
 
-        [$other, $otherFactory] = $this->tenantUser('factory_owner', 'other-download');
+        [$other, $otherFactory] = $this->tenantUser('factory_admin', 'other-download');
         $this->actingAs($other)->withSession(['factory_id' => $otherFactory->id])
             ->get(route('events.media', [$event, 'image']))->assertForbidden();
         $this->get(route('events.media', [$event, 'document']))->assertNotFound();
@@ -105,7 +105,7 @@ class FileUploadSecurityTest extends TestCase
 
     private function eventFixture(string $suffix): array
     {
-        [$owner, $factory] = $this->tenantUser('factory_owner', $suffix);
+        [$owner, $factory] = $this->tenantUser('factory_admin', $suffix);
         $camera = Camera::forceCreate(['factory_id' => $factory->id, 'name' => 'Camera', 'reference' => "C-{$suffix}", 'status' => 'online']);
         $event = FireEvent::forceCreate([
             'factory_id' => $factory->id, 'camera_id' => $camera->id, 'event_uuid' => (string) Str::uuid(),

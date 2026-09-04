@@ -13,104 +13,36 @@ class DemoUsersByRoleSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::transaction(function () {
-            $factory = Factory::firstOrCreate(
-                ['reference' => 'FACTORY-DEMO-001'],
-                [
-                    'name' => 'Factory Demo',
-                    'slug' => 'factory-demo',
-                    'city' => 'Fès',
-                    'country' => 'Morocco',
-                    'timezone' => 'Africa/Fès',
-                    'status' => 'active',
-                ]
-            );
-
+        DB::transaction(function (): void {
+            $factory = Factory::local();
             $password = Hash::make(env('DEMO_USERS_PASSWORD', 'password'));
 
             $users = [
-                [
-                    'role' => 'super_admin',
-                    'name' => 'Super Admin',
-                    'email' => 'superadmin@firefactory.test',
-                    'platform' => true,
-                ],
-                [
-                    'role' => 'platform_admin',
-                    'name' => 'Platform Admin',
-                    'email' => 'platformadmin@firefactory.test',
-                    'platform' => true,
-                ],
-                [
-                    'role' => 'factory_owner',
-                    'name' => 'Factory Owner',
-                    'email' => 'owner@firefactory.test',
-                ],
-                [
-                    'role' => 'factory_manager',
-                    'name' => 'Factory Manager',
-                    'email' => 'manager@firefactory.test',
-                ],
-                [
-                    'role' => 'safety_officer',
-                    'name' => 'Safety Officer',
-                    'email' => 'safety@firefactory.test',
-                ],
-                [
-                    'role' => 'security_agent',
-                    'name' => 'Security Agent',
-                    'email' => 'security@firefactory.test',
-                ],
-                [
-                    'role' => 'maintenance_agent',
-                    'name' => 'Maintenance Agent',
-                    'email' => 'maintenance@firefactory.test',
-                ],
-                [
-                    'role' => 'viewer',
-                    'name' => 'Viewer',
-                    'email' => 'viewer@firefactory.test',
-                ],
+                ['role' => 'system_admin', 'name' => 'System Admin', 'email' => 'sysadmin@firefactory.local', 'platform' => true],
+                ['role' => 'factory_admin', 'name' => 'Factory Admin', 'email' => 'admin@firefactory.local'],
+                ['role' => 'factory_manager', 'name' => 'Factory Manager', 'email' => 'manager@firefactory.local'],
+                ['role' => 'safety_officer', 'name' => 'Safety Officer', 'email' => 'safety@firefactory.local'],
+                ['role' => 'security_agent', 'name' => 'Security Agent', 'email' => 'security@firefactory.local'],
+                ['role' => 'maintenance_agent', 'name' => 'Maintenance Agent', 'email' => 'maintenance@firefactory.local'],
+                ['role' => 'viewer', 'name' => 'Viewer', 'email' => 'viewer@firefactory.local'],
             ];
 
             foreach ($users as $data) {
                 $user = User::updateOrCreate(
                     ['email' => $data['email']],
-                    [
-                        'name' => $data['name'],
-                        'phone' => null,
-                        'password' => $password,
-                        'status' => 'active',
-                        'email_verified_at' => now(),
-                    ]
+                    ['name' => $data['name'], 'phone' => null, 'password' => $password, 'status' => 'active', 'is_active' => true, 'is_super_admin' => $data['role'] === 'system_admin', 'email_verified_at' => now()],
                 );
-
                 $role = Role::where('name', $data['role'])->firstOrFail();
+                $user->roles()->syncWithoutDetaching([$role->id => ['factory_id' => $role->is_platform ? null : $factory->id]]);
 
                 if (! ($data['platform'] ?? false)) {
                     $factory->users()->syncWithoutDetaching([
-                        $user->id => [
-                            'status' => 'active',
-                            'joined_at' => now(),
-                        ],
+                        $user->id => ['role' => $data['role'], 'status' => 'active', 'joined_at' => now()],
                     ]);
                 }
 
-                DB::table('role_user')->updateOrInsert(
-                    [
-                        'role_id' => $role->id,
-                        'user_id' => $user->id,
-                        'factory_id' => ($data['platform'] ?? false)
-                            ? null
-                            : $factory->id,
-                    ],
-                    []
-                );
-
-                if ($data['role'] === 'factory_owner') {
-                    $factory->update([
-                        'owner_id' => $user->id,
-                    ]);
+                if ($data['role'] === 'factory_admin') {
+                    $factory->update(['owner_id' => $user->id]);
                 }
             }
         });

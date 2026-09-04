@@ -14,7 +14,7 @@ class FactoryWebPolicy
 
     public function viewAny(User $u): bool
     {
-        return $u->roles()->where('roles.is_platform', true)->exists();
+        return false;
     }
 
     public function view(User $u, Factory $f): bool
@@ -24,7 +24,7 @@ class FactoryWebPolicy
 
     public function create(User $u): bool
     {
-        return $u->hasPermission('factories.create');
+        return false;
     }
 
     public function update(User $u, Factory $f): bool
@@ -34,6 +34,6 @@ class FactoryWebPolicy
 
     public function delete(User $u, Factory $f): bool
     {
-        return $u->hasPermission('factories.delete') && ! $f->is_active && ! $f->fireEvents()->exists();
+        return false;
     }
 }

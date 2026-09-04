@@ -18,10 +18,6 @@ class MembershipService
     public function invite(Factory $factory, array $data, User $actor): User
     {
         $this->ensureAssignableRole($actor, $data['role']);
-        $limit = $factory->currentSubscription()->with('plan')->first()?->plan?->max_users;
-        if ($limit !== null && $factory->users()->count() >= $limit) {
-            throw ValidationException::withMessages(['email' => __('phase2.members.plan_limit')]);
-        }
         $email = Str::lower(trim($data['email']));
         $existing = User::query()->whereRaw('LOWER(email) = ?', [$email])->first();
 
@@ -72,18 +68,18 @@ class MembershipService
 
     private function ensureAssignableRole(User $actor, string $role): void
     {
-        $isPlatformAdministrator = $actor->is_super_admin || $actor->roles()->where('roles.is_platform', true)->exists();
-        if ($role === 'factory_owner' && ! $isPlatformAdministrator) {
+        $isSystemAdministrator = $actor->hasRole('system_admin');
+        if ($role === 'factory_admin' && ! $isSystemAdministrator) {
             throw ValidationException::withMessages(['role' => __('phase2.members.owner_assignment_forbidden')]);
         }
     }
 
     private function protectOwner(Factory $factory, User $member, string $currentRole, string $nextRole, bool $active): void
     {
-        if ($currentRole !== 'factory_owner' || ($nextRole === 'factory_owner' && $active)) {
+        if ($currentRole !== 'factory_admin' || ($nextRole === 'factory_admin' && $active)) {
             return;
         }
-        $anotherOwnerExists = $factory->users()->wherePivot('role', 'factory_owner')->wherePivot('status', 'active')->whereKeyNot($member->id)->exists();
+        $anotherOwnerExists = $factory->users()->wherePivot('role', 'factory_admin')->wherePivot('status', 'active')->whereKeyNot($member->id)->exists();
         abort_unless($anotherOwnerExists, 422, __('phase2.members.last_owner'));
     }
 }

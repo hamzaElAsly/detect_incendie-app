@@ -7,10 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Alert;
 use App\Models\AuditLog;
 use App\Models\Camera;
-use App\Models\Factory;
-use App\Models\FireEvent;
-use App\Models\Subscription;
-use App\Models\User;
 use App\Services\FactoryContext;
 use Illuminate\View\View;
 
@@ -30,11 +26,7 @@ class DashboardController extends Controller
         $recentActivity = AuditLog::forFactory($factory)->with('user:id,name')->latest()->limit(6)->get();
         $liveCameras = Camera::forFactory($factory)->with('zone:id,name')->with(['fireEvents' => fn ($query) => $query->latest('detected_at')->limit(1)])->orderByRaw("CASE WHEN status = 'online' THEN 0 ELSE 1 END")->limit(8)->get();
         $zones = $factory->zones()->withCount(['cameras', 'fireEvents'])->orderBy('name')->limit(12)->get();
-        $platform = ($user->is_super_admin || $user->roles()->where('roles.is_platform', true)->exists()) ? [
-            'factories' => Factory::count(), 'users' => User::count(), 'cameras' => Camera::count(),
-            'events' => FireEvent::count(), 'subscriptions' => Subscription::whereIn('status', ['trial', 'active'])->count(),
-        ] : null;
 
-        return view('dashboard.index', compact('factory', 'summary', 'metrics', 'eventsChart', 'cameraStatus', 'recentEvents', 'criticalAlerts', 'recentActivity', 'platform', 'liveCameras', 'zones'));
+        return view('dashboard.index', compact('factory', 'summary', 'metrics', 'eventsChart', 'cameraStatus', 'recentEvents', 'criticalAlerts', 'recentActivity', 'liveCameras', 'zones'));
     }
 }

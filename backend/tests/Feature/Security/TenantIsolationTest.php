@@ -28,7 +28,7 @@ class TenantIsolationTest extends TestCase
         parent::setUp();
         $this->seed(RolesAndPermissionsSeeder::class);
         $this->actor = User::factory()->create(['is_active' => true, 'email_verified_at' => now()]);
-        $this->actor->roles()->attach(Role::where('name', 'platform_admin')->firstOrFail(), ['factory_id' => null]);
+        $this->actor->roles()->attach(Role::where('name', 'system_admin')->firstOrFail(), ['factory_id' => null]);
         $this->factoryA = Factory::create(['name' => 'Factory A', 'slug' => 'factory-a']);
         $this->factoryB = Factory::create(['name' => 'Factory B', 'slug' => 'factory-b']);
         $this->actingAs($this->actor)->withSession(['factory_id' => $this->factoryA->id]);

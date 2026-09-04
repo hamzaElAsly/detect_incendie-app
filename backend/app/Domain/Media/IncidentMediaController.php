@@ -2,15 +2,16 @@
 
 namespace App\Domain\Media;
 
-use App\Models\Factory;
 use App\Models\FireEvent;
+use App\Services\FactoryContext;
 
 class IncidentMediaController
 {
     public function __construct(private IncidentMediaService $media) {}
 
-    public function store(IncidentMediaRequest $request, Factory $factory, FireEvent $event)
+    public function store(IncidentMediaRequest $request, FactoryContext $context, FireEvent $event)
     {
+        $factory = $context->get();
         abort_unless($event->factory_id === $factory->id && $request->user()->hasPermission('events.create', $factory), 403);
         $event = $this->media->store($event, $request->file('image'), $request->file('video'));
 

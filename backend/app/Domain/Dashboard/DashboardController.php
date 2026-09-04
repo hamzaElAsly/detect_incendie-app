@@ -2,7 +2,7 @@
 
 namespace App\Domain\Dashboard;
 
-use App\Models\Factory;
+use App\Services\FactoryContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,28 +15,28 @@ class DashboardController
         return response()->json(['success' => true, 'message' => 'Dashboard retrieved successfully', 'data' => $data, 'meta' => (object) []]);
     }
 
-    public function summary(Factory $factory)
+    public function summary(FactoryContext $context)
     {
-        return $this->ok($this->dashboard->summary($factory));
+        return $this->ok($this->dashboard->summary($context->get()));
     }
 
-    public function eventsChart(Request $r, Factory $factory)
+    public function eventsChart(Request $r, FactoryContext $context)
     {
-        return $this->ok($this->dashboard->eventsChart($factory, (int) $r->integer('days', 30)));
+        return $this->ok($this->dashboard->eventsChart($context->get(), (int) $r->integer('days', 30)));
     }
 
-    public function cameraStatus(Factory $factory)
+    public function cameraStatus(FactoryContext $context)
     {
-        return $this->ok($this->dashboard->cameraStatus($factory));
+        return $this->ok($this->dashboard->cameraStatus($context->get()));
     }
 
-    public function recentEvents(Request $r, Factory $factory)
+    public function recentEvents(Request $r, FactoryContext $context)
     {
-        return $this->ok($this->dashboard->recentEvents($factory, (int) $r->integer('limit', 10)));
+        return $this->ok($this->dashboard->recentEvents($context->get(), (int) $r->integer('limit', 10)));
     }
 
-    public function metrics(Factory $factory)
+    public function metrics(FactoryContext $context)
     {
-        return $this->ok($this->dashboard->metrics($factory));
+        return $this->ok($this->dashboard->metrics($context->get()));
     }
 }

@@ -31,7 +31,7 @@ class SecurityHardeningTest extends TestCase
     public function test_deactivated_user_is_blocked_from_global_routes_but_can_logout(): void
     {
         $user = User::factory()->create(['is_active' => false, 'email_verified_at' => now()]);
-        $user->roles()->attach(Role::where('name', 'platform_admin')->firstOrFail(), ['factory_id' => null]);
+        $user->roles()->attach(Role::where('name', 'system_admin')->firstOrFail(), ['factory_id' => null]);
 
         $this->actingAs($user)->get(route('users.index'))->assertForbidden();
         $this->actingAs($user)->post(route('logout'))->assertRedirect(route('login'));
@@ -80,7 +80,7 @@ class SecurityHardeningTest extends TestCase
             'severity' => 'high', 'status' => 'pending', 'message' => $payload,
         ]);
 
-        foreach ([route('factories.show', $factory), route('alerts.show', $alert), route('camera-health.index')] as $url) {
+        foreach ([route('factory-settings.edit'), route('alerts.show', $alert), route('camera-health.index')] as $url) {
             $this->actingAs($admin)->withSession(['factory_id' => $factory->id])->get($url)
                 ->assertOk()->assertDontSee($payload, false)->assertSee(e($payload), false);
         }
@@ -157,14 +157,13 @@ class SecurityHardeningTest extends TestCase
         $this->assertSame([], Storage::disk('public')->allFiles());
     }
 
-    public function test_malicious_search_input_is_bound_and_does_not_change_query_structure(): void
+    public function test_factory_collection_routes_are_not_exposed(): void
     {
         $admin = User::factory()->create(['is_super_admin' => true, 'is_active' => true, 'email_verified_at' => now()]);
         Factory::create(['name' => 'Visible', 'slug' => 'visible']);
         Factory::create(['name' => 'Hidden', 'slug' => 'hidden']);
 
-        $this->actingAs($admin)->get(route('factories.index', ['q' => "%' OR 1=1 --"]))
-            ->assertOk()->assertSee('Aucune usine.')->assertSee('%&#039; OR 1=1 --', false);
+        $this->actingAs($admin)->get('/factories')->assertNotFound();
     }
 
     public function test_factory_settings_require_permission_and_are_audited(): void
@@ -180,8 +179,8 @@ class SecurityHardeningTest extends TestCase
             ->assertForbidden();
 
         $owner = User::factory()->create(['is_active' => true, 'email_verified_at' => now()]);
-        $ownerRole = Role::where('name', 'factory_owner')->firstOrFail();
-        $factory->users()->attach($owner, ['role' => 'factory_owner', 'status' => 'active']);
+        $ownerRole = Role::where('name', 'factory_admin')->firstOrFail();
+        $factory->users()->attach($owner, ['role' => 'factory_admin', 'status' => 'active']);
         $owner->roles()->attach($ownerRole, ['factory_id' => $factory->id]);
         $this->actingAs($owner)->withSession(['factory_id' => $factory->id])
             ->put(route('settings.update'), [

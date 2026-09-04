@@ -6,78 +6,107 @@ from typing import TypedDict
 
 import numpy as np
 from PIL import Image
-import torch
-import torch.nn.functional as F
+from ultralytics import YOLO
 
 from config import PROJECT_ROOT, settings
 from logging_config import configure_logging
-from model import CNN_Bottleneck
-from services.image_preprocessing import (
-    get_inference_transform,
-    load_model_metadata,
-    opencv_frame_to_pil,
-)
+from services.image_preprocessing import opencv_frame_to_pil
 
 configure_logging()
 logger = logging.getLogger(__name__)
 
 
-class Prediction(TypedDict):
+class BoundingBox(TypedDict):
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+
+
+class Detection(TypedDict):
+    class_id: int
+    class_name: str
+    confidence: float
+
+    bbox: BoundingBox
+
+
+class Prediction(TypedDict, total=False):
+    detections: list[Detection]
+    has_detection: bool
+    has_fire: bool
+    has_smoke: bool
+    max_confidence: float
     label: str
     confidence: float
     is_fire: bool
-    predicted_index: int
-    probabilities: dict[str, float]
 
 
 class FireDetectionService:
     def __init__(self, model_path: Path | None = None):
-        self.metadata = load_model_metadata()
-        self.classes = tuple(self.metadata["classes"])
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model_path = model_path or PROJECT_ROOT / self.metadata["checkpoint"]
-        self.transform = get_inference_transform()
-        architecture = self.metadata["architecture"]
-        self.model = CNN_Bottleneck(bottleneck_dim=int(architecture["bottleneck_dim"])).to(self.device)
-        checkpoint = torch.load(self.model_path, map_location=self.device, weights_only=True)
-        if not isinstance(checkpoint, dict) or "classifier.weight" not in checkpoint:
-            raise ValueError("Checkpoint invalide: state_dict CNN_Bottleneck attendu.")
-        expected_outputs = int(architecture["num_outputs"])
-        if checkpoint["classifier.weight"].shape[0] != expected_outputs:
-            raise ValueError("Checkpoint incompatible avec le nombre de classes des métadonnées.")
-        self.model.load_state_dict(checkpoint, strict=True)
-        self.model.eval()
-        logger.info("Modèle chargé strictement sur %s; classes=%s", self.device, self.classes)
+        self.model_path = self._resolve_model_path(model_path or settings.yolo_model_path)
+        self.model = YOLO(str(self.model_path))
+        self.classes = self._validate_class_mapping(self.model.names)
+        logger.info("Modèle YOLO V2 chargé; classes=%s; path=%s", self.classes, self.model_path)
+
+    @staticmethod
+    def _resolve_model_path(configured_path: str | Path) -> Path:
+        path = Path(configured_path)
+        candidates = [path] if path.is_absolute() else [PROJECT_ROOT / path, PROJECT_ROOT.parent / path]
+        for candidate in candidates:
+            if candidate.is_file():
+                return candidate.resolve()
+        raise FileNotFoundError(
+            f"Modèle YOLO introuvable: {configured_path}. "
+            f"Vérifiez YOLO_MODEL_PATH depuis la racine du projet."
+        )
+
+    @staticmethod
+    def _validate_class_mapping(names: object) -> dict[int, str]:
+        if isinstance(names, dict):
+            mapping = {int(index): str(name).strip().lower() for index, name in names.items()}
+        elif isinstance(names, (list, tuple)):
+            mapping = {index: str(name).strip().lower() for index, name in enumerate(names)}
+        else:
+            mapping = {}
+        if mapping != {0: "fire", 1: "smoke"}:
+            raise ValueError(f"Mapping du modèle invalide: attendu {{0: 'fire', 1: 'smoke'}}, reçu {mapping}")
+        return mapping
 
     def predict_pil(self, image: Image.Image) -> Prediction:
-        tensor = self.transform(image.convert("RGB")).unsqueeze(0).to(self.device)
-        with torch.inference_mode():
-            logits = self.model(tensor)
-            if logits.ndim != 2 or logits.shape != (1, len(self.classes)):
-                raise RuntimeError(f"Sortie modèle inattendue: {tuple(logits.shape)}")
-            probabilities_tensor = F.softmax(logits, dim=1)
-            predicted_index = int(probabilities_tensor.argmax(dim=1).item())
-            confidence = float(probabilities_tensor[0, predicted_index].item())
-        probabilities = {
-            label: float(probabilities_tensor[0, index].item())
-            for index, label in enumerate(self.classes)
-        }
-        label = self.classes[predicted_index]
+        results = self.model.predict(image.convert("RGB"), conf=settings.fire_confidence_threshold, verbose=False)
+        detections: list[Detection] = []
+        for result in results:
+            boxes = getattr(result, "boxes", None)
+            if boxes is None:
+                continue
+            for class_id_value, confidence_value, box_value in zip(boxes.cls, boxes.conf, boxes.xyxy):
+                class_id = int(class_id_value.item() if hasattr(class_id_value, "item") else class_id_value)
+                confidence = float(confidence_value.item() if hasattr(confidence_value, "item") else confidence_value)
+                coordinates = box_value.tolist() if hasattr(box_value, "tolist") else list(box_value)
+                if class_id not in self.classes or confidence < settings.fire_confidence_threshold:
+                    continue
+                detections.append({
+                    "class_id": class_id,
+                    "class_name": self.classes[class_id],
+                    "confidence": confidence,
+                    "bbox": {key: float(value) for key, value in zip(("x1", "y1", "x2", "y2"), coordinates)},
+                })
+        detections.sort(key=lambda detection: detection["confidence"], reverse=True)
+        max_confidence = detections[0]["confidence"] if detections else 0.0
+        label = detections[0]["class_name"] if detections else "no_detection"
         result: Prediction = {
+            "detections": detections,
+            "has_detection": bool(detections),
+            "has_fire": any(item["class_name"] == "fire" for item in detections),
+            "has_smoke": any(item["class_name"] == "smoke" for item in detections),
+            "max_confidence": max_confidence,
             "label": label,
-            "confidence": confidence,
-            "is_fire": label == "fire",
-            "predicted_index": predicted_index,
-            "probabilities": probabilities,
+            "confidence": max_confidence,
+            "is_fire": any(item["class_name"] == "fire" for item in detections),
         }
         if settings.prediction_debug:
-            logger.info(
-                "Prediction debug logits=%s probabilities=%s index=%s label=%s confidence=%.6f "
-                "classes=%s tensor_shape=%s tensor_min=%.6f tensor_max=%.6f tensor_mean=%.6f device=%s",
-                logits.detach().cpu().tolist(), probabilities, predicted_index, label, confidence,
-                self.classes, tuple(tensor.shape), float(tensor.min()), float(tensor.max()),
-                float(tensor.mean()), self.device,
-            )
+            logger.info("Prediction debug detections=%s threshold=%.4f", detections, settings.fire_confidence_threshold)
         return result
 
     def predict_frame(self, frame: np.ndarray) -> Prediction:

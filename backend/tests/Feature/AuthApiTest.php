@@ -11,15 +11,15 @@ class AuthApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registration_creates_owner_factory_and_hashed_token(): void
+    public function test_registration_creates_local_factory_admin_and_hashed_token(): void
     {
         $response = $this->postJson('/api/auth/register', [
-            'name' => 'Factory Owner', 'email' => 'owner@example.com', 'password' => 'VerySecure!123', 'password_confirmation' => 'VerySecure!123', 'factory_name' => 'Atlas Plant',
+            'name' => 'Factory Admin', 'email' => 'admin@example.com', 'password' => 'VerySecure!123', 'password_confirmation' => 'VerySecure!123',
         ])->assertCreated()->assertJsonStructure(['data' => ['id', 'email', 'factories'], 'factory_id', 'token', 'token_type']);
 
-        $user = User::whereEmail('owner@example.com')->firstOrFail();
+        $user = User::whereEmail('admin@example.com')->firstOrFail();
         $factory = Factory::firstOrFail();
-        $this->assertDatabaseHas('factory_user', ['factory_id' => $factory->id, 'user_id' => $user->id, 'role' => 'factory_owner']);
+        $this->assertDatabaseHas('factory_user', ['factory_id' => $factory->id, 'user_id' => $user->id, 'role' => 'factory_admin']);
         $this->assertNotSame($response->json('token'), $user->apiTokens()->firstOrFail()->token);
     }
 

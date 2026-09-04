@@ -15,22 +15,28 @@ class ResolveFactoryContext
 
     public function handle(Request $request, Closure $next): Response
     {
-        $id = $request->header('X-Factory-ID');
-        if (! $id) {
-            return new JsonResponse(['message' => 'The X-Factory-ID header is required.'], 400);
+        $factory = Factory::local();
+        $headerId = $request->header('X-Factory-ID');
+        $routeFactory = $request->route('factory');
+
+        if ($headerId && $headerId !== $factory->getKey()) {
+            return new JsonResponse(['message' => 'Factory does not match this local installation.'], 403);
         }
 
-        $factory = Factory::find($id);
-        if (! $factory) {
-            return new JsonResponse(['message' => 'Factory not found.'], 404);
+        if ($routeFactory instanceof Factory && $routeFactory->isNot($factory)) {
+            return new JsonResponse(['message' => 'Factory does not match this local installation.'], 403);
         }
+
+        if (is_string($routeFactory) && $routeFactory !== $factory->getKey()) {
+            return new JsonResponse(['message' => 'Factory does not match this local installation.'], 403);
+        }
+
         if (! $factory->is_active) {
             return new JsonResponse(['message' => 'This factory is inactive.'], 403);
         }
 
         $user = $request->user();
-        $isSuperAdmin = (bool) ($user->is_super_admin ?? false);
-        if (! $isSuperAdmin && ! $user->belongsToFactory($factory)) {
+        if (! $user?->canAccessFactory($factory)) {
             return new JsonResponse(['message' => 'You do not belong to this factory.'], 403);
         }
 

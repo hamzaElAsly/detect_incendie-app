@@ -18,7 +18,7 @@ class UserWebPolicy
 
     public function create(User $u): bool
     {
-        return $u->is_super_admin || $u->hasRole('platform_admin');
+        return $u->hasRole('system_admin');
     }
 
     public function view(User $u, User $t): bool

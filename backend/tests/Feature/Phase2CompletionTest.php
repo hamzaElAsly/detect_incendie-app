@@ -7,7 +7,6 @@ use App\Domain\Health\CameraStatusService;
 use App\Models\Camera;
 use App\Models\Factory;
 use App\Models\FactorySetting;
-use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,32 +25,25 @@ class Phase2CompletionTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    public function test_super_admin_creates_a_global_user_with_hashed_password_role_and_audit(): void
+    public function test_system_admin_creates_a_system_user_with_hashed_password_role_and_audit(): void
     {
         $admin = User::factory()->create(['is_super_admin' => true]);
         $response = $this->actingAs($admin)->post(route('users.store'), [
-            'name' => 'Platform Operator', 'email' => ' OPERATOR@EXAMPLE.TEST ',
+            'name' => 'System Operator', 'email' => ' OPERATOR@EXAMPLE.TEST ',
             'password' => 'Strong-password-123!', 'password_confirmation' => 'Strong-password-123!',
-            'role' => 'platform_admin', 'is_active' => 1,
+            'role' => 'system_admin', 'is_active' => 1,
         ]);
         $user = User::where('email', 'operator@example.test')->firstOrFail();
         $response->assertRedirect(route('users.show', $user));
         $this->assertTrue(Hash::check('Strong-password-123!', $user->password));
-        $this->assertTrue($user->hasRole('platform_admin'));
+        $this->assertTrue($user->hasRole('system_admin'));
         $this->assertDatabaseHas('audit_logs', ['action' => 'user.created', 'entity_id' => (string) $user->id]);
     }
 
-    public function test_non_platform_user_and_platform_admin_privilege_escalation_are_forbidden(): void
+    public function test_non_system_user_cannot_create_system_administrators(): void
     {
         $viewer = User::factory()->create();
         $this->actingAs($viewer)->post(route('users.store'), [])->assertForbidden();
-        $admin = User::factory()->create();
-        $admin->roles()->attach(Role::where('name', 'platform_admin')->firstOrFail(), ['factory_id' => null]);
-        $this->actingAs($admin)->post(route('users.store'), [
-            'name' => 'Root', 'email' => 'root@example.test', 'password' => 'Strong-password-123!',
-            'password_confirmation' => 'Strong-password-123!', 'role' => 'super_admin',
-        ])->assertForbidden();
-        $this->assertDatabaseMissing('users', ['email' => 'root@example.test']);
     }
 
     public function test_edge_heartbeat_requires_valid_active_scoped_same_tenant_client(): void

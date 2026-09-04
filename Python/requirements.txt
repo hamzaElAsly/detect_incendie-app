@@ -9,6 +9,7 @@ python-multipart==0.0.32
 streamlit==1.59.1
 opencv-python
 ultralytics==8.4.95
+pi-heif
 sqlalchemy
 pymysql
 python-dotenv

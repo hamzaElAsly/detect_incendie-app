@@ -11,16 +11,13 @@ use App\Http\Controllers\Web\CameraController;
 use App\Http\Controllers\Web\CameraHealthController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\FactoryController;
-use App\Http\Controllers\Web\FactorySelectionController;
 use App\Http\Controllers\Web\FactorySettingController;
 use App\Http\Controllers\Web\FireEventController;
 use App\Http\Controllers\Web\MemberController;
 use App\Http\Controllers\Web\NotificationController;
-use App\Http\Controllers\Web\PlanController;
 use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\RoleController;
-use App\Http\Controllers\Web\SubscriptionController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\ZoneController;
 use Illuminate\Support\Facades\Route;
@@ -42,14 +39,8 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware(['auth', 'verified', 'web.context'])->group(function (): void {
-    Route::post('/factories/{factory}/select', FactorySelectionController::class)->name('factory.switch');
-    Route::resource('factories', FactoryController::class);
-    Route::post('factories/{factory}/toggle', [FactoryController::class, 'toggle'])->name('factories.toggle');
     Route::resource('users', UserController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
     Route::resource('roles', RoleController::class)->only(['index', 'show', 'edit', 'update']);
-    Route::resource('plans', PlanController::class)->except(['show', 'destroy']);
-    Route::post('plans/{plan}/toggle', [PlanController::class, 'toggle'])->name('plans.toggle');
-    Route::resource('subscriptions', SubscriptionController::class)->except(['destroy']);
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [ProfileController::class, 'update'])->middleware('throttle:profile-upload')->name('profile.update');
     Route::put('profile/password', [ProfileController::class, 'password'])->name('profile.password');
@@ -76,6 +67,8 @@ Route::middleware(['auth', 'verified', 'web.context'])->group(function (): void 
         Route::resource('notifications', NotificationController::class)->only(['index', 'show']);
         Route::get('settings', [FactorySettingController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [FactorySettingController::class, 'update'])->name('settings.update');
+        Route::get('settings/factory', [FactoryController::class, 'editLocal'])->name('factory-settings.edit');
+        Route::put('settings/factory', [FactoryController::class, 'updateLocal'])->middleware('throttle:sensitive-write')->name('factory-settings.update');
         Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/export', [ReportController::class, 'export'])->middleware('throttle:export')->name('reports.export');

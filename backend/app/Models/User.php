@@ -84,7 +84,13 @@ class User extends Authenticatable implements MustVerifyEmailContract
 
     public function hasRole(string $role, ?Factory $factory = null): bool
     {
-        if ($this->is_super_admin && $role === 'super_admin') {
+        $role = match ($role) {
+            'super_admin', 'platform_admin' => 'system_admin',
+            'factory_owner' => 'factory_admin',
+            default => $role,
+        };
+
+        if ($this->is_super_admin && $role === 'system_admin') {
             return true;
         }
 
@@ -117,7 +123,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
     public function canAccessFactory(Factory $factory): bool
     {
         return $this->is_super_admin
-            || $this->roles()->where('roles.is_platform', true)->exists()
+            || $this->hasRole('system_admin')
             || $this->belongsToFactory($factory);
     }
 
@@ -128,10 +134,12 @@ class User extends Authenticatable implements MustVerifyEmailContract
 
     public function accessibleFactories(): Collection
     {
-        if ($this->is_super_admin || $this->roles()->where('roles.is_platform', true)->exists()) {
-            return Factory::query()->where('is_active', true)->orderBy('name')->get();
+        $factory = Factory::local();
+
+        if ($this->canAccessFactory($factory)) {
+            return collect([$factory]);
         }
 
-        return $this->factories()->where('factories.is_active', true)->orderBy('factories.name')->get();
+        return collect();
     }
 }

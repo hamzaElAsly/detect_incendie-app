@@ -1,3 +1,29 @@
 <?php
 
-return ['main' => 'Navigation principale', 'open_menu' => 'Ouvrir le menu', 'command_center' => 'Centre de commande', 'dashboard' => 'Tableau de bord', 'cameras' => 'Surveillance en direct', 'events' => 'Événements incendie', 'alerts' => 'Alertes', 'notifications' => 'Notifications', 'infrastructure' => 'Infrastructure', 'zones' => 'Zones', 'camera_health' => 'Santé des caméras', 'factories' => 'Usines', 'team_access' => 'Équipe et accès', 'members' => 'Membres', 'users' => 'Utilisateurs', 'roles' => 'Rôles et permissions', 'operations' => 'Opérations', 'recipients' => 'Destinataires', 'reports' => 'Rapports', 'audit_logs' => 'Journaux d’audit', 'api_clients' => 'Clients API', 'platform' => 'Plateforme', 'plans' => 'Plans', 'subscriptions' => 'Abonnements', 'settings' => 'Paramètres'];
+return [
+    'main' => 'Navigation principale',
+    'open_menu' => 'Ouvrir le menu',
+    'collapse_menu' => 'Replier le menu',
+    'command_center' => 'Centre de commande',
+    'dashboard' => 'Tableau de bord',
+    'cameras' => 'Surveillance en direct',
+    'events' => 'Evenements incendie',
+    'alerts' => 'Alertes',
+    'notifications' => 'Notifications',
+    'infrastructure' => 'Infrastructure',
+    'zones' => 'Zones',
+    'camera_health' => 'Sante des cameras',
+    'factory_settings' => 'Parametres usine',
+    'team_access' => 'Equipe et acces',
+    'members' => 'Membres',
+    'users' => 'Utilisateurs',
+    'roles' => 'Roles et permissions',
+    'operations' => 'Operations',
+    'recipients' => 'Destinataires',
+    'reports' => 'Rapports',
+    'audit_logs' => 'Journaux audit',
+    'api_clients' => 'Clients API',
+    'system_administration' => 'Administration systeme',
+    'settings' => 'Parametres systeme',
+    'local_installation' => 'Installation locale',
+];

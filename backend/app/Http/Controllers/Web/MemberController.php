@@ -76,7 +76,7 @@ class MemberController extends Controller
     private function assignableRoles(User $actor)
     {
         return Role::query()->where('is_platform', false)
-            ->when(! $actor->is_super_admin && ! $actor->roles()->where('roles.is_platform', true)->exists(), fn ($query) => $query->where('name', '!=', 'factory_owner'))
+            ->when(! $actor->hasRole('system_admin'), fn ($query) => $query->where('name', '!=', 'factory_admin'))
             ->orderBy('label')->get();
     }
 }

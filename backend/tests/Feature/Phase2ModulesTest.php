@@ -3,14 +3,11 @@
 namespace Tests\Feature;
 
 use App\Domain\Members\MembershipService;
-use App\Domain\Subscriptions\SubscriptionService;
 use App\Models\AlertRecipient;
 use App\Models\ApiClient;
 use App\Models\Camera;
 use App\Models\Factory;
-use App\Models\Plan;
 use App\Models\Role;
-use App\Models\Subscription;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,16 +38,16 @@ class Phase2ModulesTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'member.invited', 'factory_id' => $factory->id]);
     }
 
-    public function test_factory_owner_cannot_escalate_a_member_to_owner(): void
+    public function test_factory_admin_cannot_escalate_a_member_to_factory_admin(): void
     {
-        [$owner, $factory] = $this->factoryUser('factory_owner');
+        [$owner, $factory] = $this->factoryUser('factory_admin');
         $this->expectException(ValidationException::class);
-        app(MembershipService::class)->invite($factory, ['name' => 'Second Owner', 'email' => 'second@example.test', 'role' => 'factory_owner'], $owner);
+        app(MembershipService::class)->invite($factory, ['name' => 'Second Admin', 'email' => 'second@example.test', 'role' => 'factory_admin'], $owner);
     }
 
     public function test_cross_factory_resources_are_forbidden_by_direct_url(): void
     {
-        [$manager, $own] = $this->factoryUser('factory_owner');
+        [$manager, $own] = $this->factoryUser('factory_admin');
         $other = Factory::create(['name' => 'Other', 'slug' => 'other']);
         $camera = Camera::forceCreate(['factory_id' => $other->id, 'name' => 'Foreign', 'reference' => 'FOREIGN', 'status' => 'offline']);
         $recipient = AlertRecipient::forceCreate(['factory_id' => $other->id, 'name' => 'Foreign', 'email' => 'foreign@example.test', 'channels' => ['email'], 'severity_min' => 'low']);
@@ -62,34 +59,11 @@ class Phase2ModulesTest extends TestCase
         $this->get(route('api-clients.show', $client))->assertForbidden();
     }
 
-    public function test_only_one_current_subscription_is_allowed_per_factory(): void
-    {
-        $admin = User::factory()->create(['is_super_admin' => true]);
-        $factory = Factory::create(['name' => 'Billing', 'slug' => 'billing']);
-        $plan = Plan::create(['name' => 'One', 'code' => 'one', 'is_active' => true]);
-        app(SubscriptionService::class)->create(['factory_id' => $factory->id, 'plan_id' => $plan->id, 'status' => 'active'], $admin);
-
-        $this->expectException(ValidationException::class);
-        app(SubscriptionService::class)->create(['factory_id' => $factory->id, 'plan_id' => $plan->id, 'status' => 'trial'], $admin);
-    }
-
-    public function test_plan_member_limit_is_enforced(): void
-    {
-        $admin = User::factory()->create(['is_super_admin' => true]);
-        $factory = Factory::create(['name' => 'Limited', 'slug' => 'limited']);
-        $factory->users()->attach($admin, ['role' => 'factory_owner', 'status' => 'active']);
-        $plan = Plan::create(['name' => 'Starter', 'code' => 'starter', 'max_users' => 1, 'is_active' => true]);
-        Subscription::forceCreate(['factory_id' => $factory->id, 'plan_id' => $plan->id, 'status' => 'active']);
-
-        $this->expectException(ValidationException::class);
-        app(MembershipService::class)->invite($factory, ['name' => 'Blocked', 'email' => 'blocked@example.test', 'role' => 'viewer'], $admin);
-    }
-
     public function test_system_roles_cannot_be_modified_even_by_super_admin(): void
     {
         $admin = User::factory()->create(['is_super_admin' => true]);
         Factory::create(['name' => 'Platform', 'slug' => 'platform']);
-        $role = Role::where('name', 'super_admin')->firstOrFail();
+        $role = Role::where('name', 'system_admin')->firstOrFail();
 
         $this->actingAs($admin)->put(route('roles.update', $role), ['permissions' => []])->assertForbidden();
     }

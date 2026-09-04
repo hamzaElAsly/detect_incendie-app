@@ -60,6 +60,6 @@ class RoleController extends Controller
 
     private function guardSystemRole(Role $role): void
     {
-        abort_if(in_array($role->name, ['super_admin', 'platform_admin'], true), 403, 'Les rôles système de plateforme sont immuables.');
+        abort_if($role->name === 'system_admin', 403, 'The system administrator role is immutable.');
     }
 }

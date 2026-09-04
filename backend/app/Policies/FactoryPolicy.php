@@ -14,6 +14,6 @@ class FactoryPolicy
 
     public function update(User $user, Factory $factory): bool
     {
-        return (bool) ($user->is_super_admin ?? false) || $factory->users()->whereKey($user->id)->wherePivotIn('role', ['factory_owner', 'factory_admin'])->exists();
+        return (bool) ($user->is_super_admin ?? false) || $factory->users()->whereKey($user->id)->wherePivotIn('role', ['factory_admin'])->exists();
     }
 }

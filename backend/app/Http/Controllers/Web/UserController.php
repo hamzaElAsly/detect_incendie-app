@@ -52,7 +52,7 @@ class UserController extends Controller
     public function destroy(User $user, AuditService $audit): RedirectResponse
     {
         $this->authorize('delete', $user);
-        abort_if($user->factories()->wherePivot('role', 'factory_owner')->exists(), 422, 'Un propriétaire d’usine ne peut pas être supprimé directement.');
+        abort_if($user->factories()->wherePivot('role', 'factory_admin')->exists(), 422, 'A factory administrator cannot be removed directly.');
         if ($user->is_super_admin && User::where('is_super_admin', true)->where('is_active', true)->whereKeyNot($user->id)->doesntExist()) {
             throw ValidationException::withMessages(['user' => 'Le dernier super-administrateur actif ne peut pas être désactivé.']);
         }

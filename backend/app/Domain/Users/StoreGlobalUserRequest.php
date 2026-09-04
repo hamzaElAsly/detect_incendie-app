@@ -11,7 +11,7 @@ class StoreGlobalUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) ($this->user()?->is_super_admin || $this->user()?->hasRole('platform_admin'));
+        return (bool) $this->user()?->hasRole('system_admin');
     }
 
     protected function prepareForValidation(): void
@@ -27,7 +27,7 @@ class StoreGlobalUserRequest extends FormRequest
     public function assignableRole(): Role
     {
         $role = Role::where('name', $this->validated('role'))->where('is_platform', true)->firstOrFail();
-        abort_if(! $this->user()->is_super_admin && $role->name === 'super_admin', 403);
+        abort_unless($role->name === 'system_admin', 403);
 
         return $role;
     }
