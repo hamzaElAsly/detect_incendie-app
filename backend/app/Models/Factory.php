@@ -47,9 +47,9 @@ class Factory extends Model
         return static::query()
             ->where('is_active', true)
             ->orderBy('created_at')
-            ->orderBy('name')
+            ->orderBy('id')
             ->first()
-            ?? static::query()->orderBy('created_at')->orderBy('name')->first()
+            ?? static::query()->orderBy('created_at')->orderBy('id')->first()
             ?? static::query()->create([
                 'name' => config('app.name', 'Local Fire Detection Site'),
                 'slug' => 'local-installation',

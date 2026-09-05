@@ -46,7 +46,7 @@ class Phase2CompletionTest extends TestCase
         $this->actingAs($viewer)->post(route('users.store'), [])->assertForbidden();
     }
 
-    public function test_edge_heartbeat_requires_valid_active_scoped_same_tenant_client(): void
+    public function test_edge_heartbeat_requires_valid_active_scoped_same_site_client(): void
     {
         $factory = Factory::create(['name' => 'Alpha', 'slug' => 'alpha']);
         $camera = Camera::forceCreate(['factory_id' => $factory->id, 'name' => 'Gate', 'reference' => 'G1', 'status' => 'offline']);

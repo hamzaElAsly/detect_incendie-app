@@ -15,7 +15,7 @@ class AuthApiTest extends TestCase
     {
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Factory Admin', 'email' => 'admin@example.com', 'password' => 'VerySecure!123', 'password_confirmation' => 'VerySecure!123',
-        ])->assertCreated()->assertJsonStructure(['data' => ['id', 'email', 'factories'], 'factory_id', 'token', 'token_type']);
+        ])->assertCreated()->assertJsonStructure(['data' => ['id', 'email', 'factory'], 'factory', 'factory_id', 'token', 'token_type']);
 
         $user = User::whereEmail('admin@example.com')->firstOrFail();
         $factory = Factory::firstOrFail();

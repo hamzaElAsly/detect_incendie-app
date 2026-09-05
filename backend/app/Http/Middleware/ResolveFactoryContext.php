@@ -41,6 +41,7 @@ class ResolveFactoryContext
         }
 
         $this->context->set($factory);
+        $request->attributes->set('factory', $factory);
         try {
             return $next($request);
         } finally {

@@ -1,10 +1,10 @@
-# État d'avancement — Plateforme Detect Incendie SaaS
+# Etat d'avancement - Detect Incendie On-Premise
 
-*Dernière mise à jour : 23 août 2026*
+*Derniere mise a jour : 4 septembre 2026*
 
 ## Vue d'ensemble
 
-**Detect Incendie** est une plateforme SaaS multi-tenant destinée à la détection et à la supervision des risques d'incendie dans les sites industriels.
+**Detect Incendie** est maintenant oriente comme plateforme on-premise mono-site pour la detection IA et la supervision locale des risques d'incendie dans une usine ou un site industriel.
 
 ```text
 Caméras → Python Edge Agent → YOLO → Laravel API → MySQL → Fire Command Center
@@ -28,21 +28,75 @@ Caméras → Python Edge Agent → YOLO → Laravel API → MySQL → Fire Comma
 
 ## Progression globale
 
-**Estimation : 65 % à 70 %.**
+**Estimation : 70 % a 75 %.**
 
-Le frontend technique et six modules de la Phase 2 sont finalisés dans le périmètre actuellement supporté. Les priorités restantes concernent Camera Health, l'authentification Edge Agent, les capacités avancées des API Clients, l'intégration IA et le déploiement.
+Le socle Laravel est refactorise vers une installation locale mono-site. Les priorites restantes concernent la validation sur environnement cible, la validation RTSP reelle, l'integration IA metier et le deploiement local.
+
+## Phase A - SaaS vers On-Premise Refactor
+
+**Statut : Termine cote application Laravel - migration cible et validations terrain restantes**
+
+- [x] SaaS Plans retires des routes, navigation, permissions et flux applicatifs
+- [x] SaaS Subscriptions retirees des routes, navigation, permissions et flux applicatifs
+- [x] Tenant/factory switching retire de l'usage normal
+- [x] Gestion multi-factory client retiree du web UI
+- [x] Modele single local factory etabli avec `Factory::local()`
+- [x] Factory Settings disponible via `/settings/factory`
+- [x] Roles SaaS migres/refactorises vers `system_admin` et `factory_admin`
+- [x] Permissions SaaS nettoyees dans le seeder et la migration Phase A
+- [x] Sidebar/navigation adaptee au produit on-premise
+- [x] Dashboard verifie sans metriques SaaS
+- [x] Users et members fonctionnent localement
+- [x] Cameras conservees et protegees par permissions
+- [x] Alerts conservees et scopees au site local
+- [x] Detections et historique conserves
+- [x] Camera Health conserve
+- [x] Alert Recipients conserve
+- [x] API Clients conserve pour Edge Agent et integrations locales
+- [x] Contrat Edge Agent conserve pour heartbeat, detection, idempotence et snapshots
+- [x] Securite Phase 3 preservee par tests automatises
+- [x] Audit offline-first effectue; dependances cloud runtime Laravel non trouvees
+- [x] Tables legacy `plans` et `subscriptions` conservees volontairement pour eviter un drop destructif
+- [x] Suite Laravel complete: 55 tests, 379 assertions
+- [x] Build frontend Vite: reussi, 55 modules
+- [x] Routes validees: 106 routes, aucune route plans/subscriptions/billing/tenant
+- [x] Documentation creee: `PHASE_A_ON_PREMISE_REFACTOR.md`
+- [ ] Migration Phase A a appliquer sur la base cible apres sauvegarde
+- [ ] Recette navigateur manuelle du sidebar/dashboard
+- [ ] Test offline reel sur environnement de deploiement
+- [ ] Validation camera RTSP reelle
+
+### Decisions Phase A
+
+- Le modele `Factory` et les colonnes `factory_id` sont conserves pour proteger les donnees historiques et les controles d'autorisation.
+- Les anciennes routes API `/api/factories/{factory}/...` restent comme aliases de compatibilite et refusent tout ID qui ne correspond pas au site local.
+- Les nouvelles routes API privilegiees pour l'on-premise sont sous `/api/installation/...`.
+- Les tables historiques `plans` et `subscriptions` ne sont plus utilisees par l'application mais restent dans le schema pour une decision de nettoyage ulterieure.
+
+### Validation Phase A - 4 septembre 2026
+
+- `php artisan test` : reussi, 55 tests, 379 assertions
+- `npm.cmd run build` : reussi, 55 modules transformes
+- `php artisan route:list` : 106 routes chargees
+- `php artisan route:list --path=plans` : aucune route
+- `php artisan route:list --path=subscriptions` : aucune route
+- `php artisan route:list --path=billing` : aucune route
+- `php artisan route:list --path=tenant` : aucune route
+- `php artisan migrate:status` : migration Phase A en attente sur la base locale configuree
+- `composer validate --no-check-publish` : `composer.json` valide; avertissements git dubious ownership dus au sandbox
+- `vendor/bin/pint --dirty` : reussi
 
 ## Réalisations principales
 
 ### Backend
 
 - Authentification et vérification d'email
-- Multi-tenancy et protections IDOR
+- Contexte local mono-site et protections IDOR
 - Factories, Members, Zones et Cameras
 - Fire Events, Alerts et Notifications
 - Reports et Audit Logs
 - API Clients avec secrets hashés, rotation et révocation
-- Plans et Subscriptions avec limites membres/caméras
+- Plans et Subscriptions retires des flux applicatifs en Phase A; tables legacy conservees
 - RBAC personnalisé avec huit rôles
 
 ### Interface
@@ -112,8 +166,8 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 - [x] Camera Health
 - [x] Alert Recipients
 - [x] API Clients
-- [x] Plans
-- [x] Subscriptions
+- [x] Plans legacy retires des flux Phase A
+- [x] Subscriptions legacy retirees des flux Phase A
 - [x] Profile
 
 ### Factories
@@ -121,7 +175,7 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 - [x] CRUD, Form Request et Policy vérifiés
 - [x] Autorisations et accès factory vérifiés
 - [x] Audit transactionnel ajouté
-- [x] Abonnement courant correctement relié
+- [x] Profil du site local correctement relie
 
 ### Members
 
@@ -129,7 +183,7 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 - [x] Ajout d'un utilisateur existant sans doublon
 - [x] Protection du dernier factory owner
 - [x] Prévention de l'escalade de rôle
-- [x] Limite du plan appliquée
+- [x] Ancienne limite de plan rendue obsolete par le modele mono-site
 - [x] Audit et tests ajoutés
 
 ### Users
@@ -137,7 +191,7 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 - [x] Liste, détail, édition et désactivation protégés
 - [x] Auto-désactivation et dernier super-admin protégés
 - [x] Audit ajouté
-- [x] Création globale transactionnelle et attribution de rôles plateforme sécurisée
+- [x] Creation systeme transactionnelle et attribution de roles securisee
 
 ### Roles & Permissions
 
@@ -148,16 +202,16 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 
 ### Camera Health
 
-- [x] Liste, filtres, historique et isolation tenant vérifiés
+- [x] Liste, filtres, historique et isolation site local verifies
 - [x] Endpoint heartbeat Edge Agent et limitation de débit
-- [x] Authentification API Client, scope et isolation tenant
+- [x] Authentification API Client, scope et isolation site local
 - [x] Seuil offline global et configurable par factory
 
 ### Alert Recipients
 
 - [x] CRUD et validation vérifiés
 - [x] Appartenance à la factory validée
-- [x] Audit et tests tenant ajoutés
+- [x] Audit et tests d'isolation site local ajoutes
 
 ### API Clients
 
@@ -166,17 +220,17 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 - [x] Expiration, scopes et dernière utilisation ajoutés
 - [x] Authentification Edge Agent testée
 
-### Plans
+### Plans legacy retires en Phase A
 
-- [x] Gestion plateforme et audit
-- [x] Limites membres et caméras appliquées
-- [x] Aucune limite fictive ajoutée
+- [x] Routes, navigation et permissions retirees des flux applicatifs
+- [x] Tables conservees pour nettoyage ulterieur apres audit des donnees
+- [x] Aucune limite SaaS active conservee dans l'usage normal
 
-### Subscriptions
+### Subscriptions legacy retirees en Phase A
 
-- [x] Correction de la création tenant
-- [x] Unicité de l'abonnement actif/trial
-- [x] Transactions, audit et tests ajoutés
+- [x] Routes, navigation et permissions retirees des flux applicatifs
+- [x] Tables conservees pour nettoyage ulterieur apres audit des donnees
+- [x] Aucun flux abonnement/trial actif dans l'usage normal
 
 ### Profile
 
@@ -194,8 +248,8 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 - [x] Camera Health
 - [x] Alert Recipients
 - [x] API Clients
-- [x] Plans
-- [x] Subscriptions
+- [x] Plans legacy retires des flux Phase A
+- [x] Subscriptions legacy retirees des flux Phase A
 - [x] Profile
 
 ### Validation de la Phase 2
@@ -217,9 +271,9 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 
 ### Résumé de finalisation du 29 juillet 2026
 
-- Users : création globale, rôle plateforme contrôlé, transaction, audit et tests.
+- Users : creation systeme, role controle, transaction, audit et tests.
 - API Clients : scopes, expiration, révocation horodatée, authentification Edge et dernière utilisation.
-- Camera Health : heartbeat tenant-scoped, statut centralisé, seuil configurable et métriques courantes.
+- Camera Health : heartbeat scope au site local, statut centralise, seuil configurable et metriques courantes.
 - Profile : avatar Storage, timezone PHP, préférences strictes et audit.
 - Migration ajoutée : `2026_07_29_000001_complete_phase_two_modules`.
 - Build Vite réussi avec 55 modules ; 33 tests et 133 assertions réussis.
@@ -237,14 +291,14 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 
 - Matrice complète : `SECURITY_PERMISSION_MATRIX.md`
 - Rapport OWASP et risques résiduels : `SECURITY_PHASE_3_REPORT.md`
-- Utilisateurs désactivés bloqués sur les routes tenant et globales
-- Autorisation tenant exécutée avant validation des mutations
+- Utilisateurs desactives bloques sur les routes locales et systeme
+- Autorisation site local executee avant validation des mutations
 - Heartbeat strict, protégé contre les champs inattendus et limité à 120/min/client
 - Actions sensibles limitées par usage
 - En-têtes HTTP défensifs ajoutés
 - CORS explicite et CSP Report-Only ajoutés
 - Injection de formules CSV neutralisée
-- Uploads incidents privés, autorisés, randomisés et servis par une route tenant-scoped
+- Uploads incidents prives, autorises, randomises et servis par une route scopee au site local
 - Changements Settings protégés par permission et journalisés
 - Stored XSS et escalades de privilèges couverts par tests
 - `php artisan test` : 52 tests réussis, 345 assertions
@@ -275,7 +329,7 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 - Entraînement complet et évaluation indépendante non exécutés; le CPU observé projette plusieurs dizaines d'heures pour un smoke complet et ne justifie pas un lancement automatique de 100 epochs
 - Garde d'entraînement active : le pipeline refuse tout Full Training sans `reports/SMOKE_TRAINING_PASS.json` attestant un smoke réussi
 - Edge Agent Laravel préparé avec filtrage temporel et file offline
-- API Laravel de détection intégrée avec scope, tenant, idempotence, audit et snapshot privé
+- API Laravel de detection integree avec scope site local, idempotence, audit et snapshot prive
 - Tests rapides Edge : 6 réussis via `unittest`; pytest absent
 - Tests Laravel ciblés : 6 réussis, 34 assertions
 - Suite Laravel complète : 58 tests réussis, 379 assertions
@@ -299,7 +353,7 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 ### Validation technique Phase 5 — 4 août 2026
 
 - 50 tests Python réussis via `unittest`, incluant reconnexion, reprise offline, multipart HTTP local et pipeline dry-run.
-- 58 tests Laravel réussis, 379 assertions; isolation tenant et authentification inchangées.
+- 58 tests Laravel reussis, 379 assertions; isolation site local et authentification inchangées.
 - Aucun modèle spécialisé ni flux caméra réel disponible : aucune validation réelle ou métier n’est revendiquée.
 - Rapport détaillé : `PHASE_5_EDGE_AGENT_REPORT.md`.
 
@@ -327,8 +381,8 @@ Le frontend technique et six modules de la Phase 2 sont finalisés dans le péri
 
 ## Prochaine étape recommandée
 
-Concevoir le contrat Edge Agent sécurisé et tenant-scoped, puis l'ingestion des données Camera Health avant l'intégration IA.
+Appliquer la migration Phase A sur la base cible apres sauvegarde, puis effectuer la recette locale navigateur, offline et Edge Agent sans revendiquer de validation RTSP reelle.
 
 ## Objectif
 
-Construire une plateforme SaaS professionnelle de détection d'incendie en temps réel pour les sites industriels, combinant IA, supervision et alertes automatiques.
+Construire une plateforme on-premise professionnelle de detection d'incendie en temps reel pour un site industriel local, combinant IA, supervision, alertes et exploitation sans dependance Internet pour le coeur du command center.

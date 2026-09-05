@@ -13,7 +13,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class TenantIsolationTest extends TestCase
+class LocalSiteIsolationTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -34,7 +34,7 @@ class TenantIsolationTest extends TestCase
         $this->actingAs($this->actor)->withSession(['factory_id' => $this->factoryA->id]);
     }
 
-    public function test_tenant_indexes_do_not_disclose_other_factory_records(): void
+    public function test_local_site_indexes_do_not_disclose_other_factory_records(): void
     {
         Zone::forceCreate(['factory_id' => $this->factoryA->id, 'name' => 'Visible A', 'reference' => 'A']);
         Zone::forceCreate(['factory_id' => $this->factoryB->id, 'name' => 'Secret B', 'reference' => 'B']);
@@ -46,7 +46,7 @@ class TenantIsolationTest extends TestCase
         $this->get(route('recipients.index'))->assertOk()->assertDontSee('Secret Recipient B');
     }
 
-    public function test_cross_tenant_route_binding_cannot_read_edit_update_or_delete_resources(): void
+    public function test_foreign_site_route_binding_cannot_read_edit_update_or_delete_resources(): void
     {
         $zone = Zone::forceCreate(['factory_id' => $this->factoryB->id, 'name' => 'B', 'reference' => 'B']);
         $camera = Camera::forceCreate(['factory_id' => $this->factoryB->id, 'name' => 'B', 'reference' => 'B']);
@@ -63,7 +63,7 @@ class TenantIsolationTest extends TestCase
         }
     }
 
-    public function test_forged_factory_and_nested_zone_ids_cannot_move_resources_between_tenants(): void
+    public function test_forged_factory_and_nested_zone_ids_cannot_move_resources_between_sites(): void
     {
         $foreignZone = Zone::forceCreate(['factory_id' => $this->factoryB->id, 'name' => 'Foreign', 'reference' => 'F']);
         $this->post(route('zones.store'), [

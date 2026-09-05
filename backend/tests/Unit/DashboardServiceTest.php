@@ -14,7 +14,7 @@ class DashboardServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_summary_is_tenant_scoped(): void
+    public function test_summary_is_scoped_to_local_site(): void
     {
         $factory = Factory::create(['name' => 'A', 'slug' => 'a']);
         $other = Factory::create(['name' => 'B', 'slug' => 'b']);

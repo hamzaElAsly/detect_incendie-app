@@ -69,7 +69,7 @@ class Phase4EdgeDetectionTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_detection_rejects_cross_tenant_and_disabled_camera(): void
+    public function test_detection_rejects_foreign_site_and_disabled_camera(): void
     {
         [$factory, $camera, $token] = $this->edgeContext();
         $other = Factory::create(['name' => 'Other', 'slug' => 'other']);

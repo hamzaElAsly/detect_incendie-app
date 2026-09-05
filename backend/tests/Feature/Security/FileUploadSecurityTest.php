@@ -27,9 +27,9 @@ class FileUploadSecurityTest extends TestCase
         Storage::fake('local');
     }
 
-    public function test_viewer_and_cross_tenant_user_cannot_upload_incident_media(): void
+    public function test_viewer_and_foreign_site_user_cannot_upload_incident_media(): void
     {
-        [$viewer, $factoryA] = $this->tenantUser('viewer', 'a');
+        [$viewer, $factoryA] = $this->localSiteUser('viewer', 'a');
         [, $factoryB, $eventB] = $this->eventFixture('b');
         $token = app(IssueApiToken::class)->execute($viewer);
 
@@ -76,7 +76,7 @@ class FileUploadSecurityTest extends TestCase
         $this->assertStringNotContainsString('..', $updated->image_path);
     }
 
-    public function test_private_incident_media_requires_same_tenant_permission(): void
+    public function test_private_incident_media_requires_same_local_site_permission(): void
     {
         [$owner, $factory, $event] = $this->eventFixture('download');
         $path = "incidents/{$factory->id}/{$event->id}/image.jpg";
@@ -86,13 +86,13 @@ class FileUploadSecurityTest extends TestCase
         $this->actingAs($owner)->withSession(['factory_id' => $factory->id])
             ->get(route('events.media', [$event, 'image']))->assertOk();
 
-        [$other, $otherFactory] = $this->tenantUser('factory_admin', 'other-download');
+        [$other, $otherFactory] = $this->localSiteUser('factory_admin', 'other-download');
         $this->actingAs($other)->withSession(['factory_id' => $otherFactory->id])
             ->get(route('events.media', [$event, 'image']))->assertForbidden();
         $this->get(route('events.media', [$event, 'document']))->assertNotFound();
     }
 
-    private function tenantUser(string $roleName, string $suffix): array
+    private function localSiteUser(string $roleName, string $suffix): array
     {
         $factory = Factory::create(['name' => "Factory {$suffix}", 'slug' => "factory-{$suffix}"]);
         $user = User::factory()->create(['is_active' => true]);
@@ -105,7 +105,7 @@ class FileUploadSecurityTest extends TestCase
 
     private function eventFixture(string $suffix): array
     {
-        [$owner, $factory] = $this->tenantUser('factory_admin', $suffix);
+        [$owner, $factory] = $this->localSiteUser('factory_admin', $suffix);
         $camera = Camera::forceCreate(['factory_id' => $factory->id, 'name' => 'Camera', 'reference' => "C-{$suffix}", 'status' => 'online']);
         $event = FireEvent::forceCreate([
             'factory_id' => $factory->id, 'camera_id' => $camera->id, 'event_uuid' => (string) Str::uuid(),

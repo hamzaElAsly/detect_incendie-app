@@ -43,7 +43,8 @@ class ExampleTest extends TestCase
     {
         $this->seed(RolesAndPermissionsSeeder::class);
         $viewer = User::factory()->create(['is_active' => true]);
-        $own = Factory::create(['name' => 'Own', 'slug' => 'own']);
+        $own = Factory::local();
+        $own->update(['name' => 'Own', 'slug' => 'own']);
         $other = Factory::create(['name' => 'Other', 'slug' => 'other']);
         $own->users()->attach($viewer, ['role' => 'viewer', 'status' => 'active']);
         $viewer->roles()->attach(Role::where('name', 'viewer')->firstOrFail(), ['factory_id' => $own->id]);

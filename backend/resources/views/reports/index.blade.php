@@ -1,2 +1,70 @@
-﻿@extends('layouts.app',['title'=>'Rapports'])
-@section('content')<div class="flex justify-between gap-4"><div><h2 class="text-2xl font-black">Rapports événements</h2><p class="text-sm text-slate-500">Analyse filtrée et export CSV tenant-scopé.</p></div><a href="{{ route('reports.export',request()->query()) }}" class="btn-secondary">Exporter CSV</a></div><form class="panel my-6 grid gap-3 p-4 md:grid-cols-4"><select name="zone_id" class="field"><option value="">Toutes zones</option>@foreach($zones as $z)<option value="{{ $z->id }}" @selected(request('zone_id')===$z->id)>{{ $z->name }}</option>@endforeach</select><select name="camera_id" class="field"><option value="">Toutes caméras</option>@foreach($cameras as $c)<option value="{{ $c->id }}" @selected(request('camera_id')===$c->id)>{{ $c->name }}</option>@endforeach</select><input class="field" type="date" name="date_from" value="{{ request('date_from') }}"><input class="field" type="date" name="date_to" value="{{ request('date_to') }}"><select name="type" class="field"><option value="">Tous types</option><option>fire</option><option>smoke</option></select><select name="severity" class="field"><option value="">Toutes sévérités</option>@foreach(['low','medium','high','critical'] as $v)<option>{{ $v }}</option>@endforeach</select><select name="status" class="field"><option value="">Tous statuts</option>@foreach(['detected','confirmed','false_alarm','resolved'] as $v)<option>{{ $v }}</option>@endforeach</select><button class="btn-primary">Appliquer</button></form><div class="panel overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-slate-50"><tr><th class="p-4">Date</th><th class="p-4">Caméra</th><th class="p-4">Zone</th><th class="p-4">Type</th><th class="p-4">Sévérité</th><th class="p-4">Statut</th></tr></thead><tbody class="divide-y">@forelse($events as $e)<tr><td class="p-4">{{ $e->detected_at->format('d/m/Y H:i') }}</td><td class="p-4">{{ $e->camera?->name }}</td><td class="p-4">{{ $e->zone?->name }}</td><td class="p-4">{{ $e->type->value }}</td><td class="p-4">{{ $e->severity->value }}</td><td class="p-4">{{ $e->status->value }}</td></tr>@empty<tr><td colspan="6"><x-ui.empty-state title="Aucun evenement" description="Aucune donnee ne correspond aux criteres du rapport." icon="▥"/></td></tr>@endforelse</tbody></table><div class="border-t p-4">{{ $events->links() }}</div></div>@endsection
+﻿@extends('layouts.app', ['title' => 'Rapports'])
+@section('content')
+  <div class="flex justify-between gap-4">
+    <div>
+      <h2 class="text-2xl font-black">Rapports événements</h2>
+      <p class="text-sm text-slate-500">Analyse filtrée et export CSV du site local.</p>
+    </div><a href="{{ route('reports.export', request()->query()) }}" class="btn-secondary">Exporter CSV</a>
+  </div>
+  <form class="panel my-6 grid gap-3 p-4 md:grid-cols-4"><select name="zone_id" class="field">
+      <option value="">Toutes zones</option>
+      @foreach ($zones as $z)
+        <option value="{{ $z->id }}" @selected(request('zone_id') === $z->id)>{{ $z->name }}</option>
+      @endforeach
+    </select>
+    <select name="camera_id" class="field">
+      <option value="">Toutes caméras</option>
+      @foreach ($cameras as $c)
+        <option value="{{ $c->id }}" @selected(request('camera_id') === $c->id)>{{ $c->name }}</option>
+      @endforeach
+    </select>
+    <input class="field" type="date" name="date_from" value="{{ request('date_from') }}"><input class="field"
+      type="date" name="date_to" value="{{ request('date_to') }}"><select name="type" class="field">
+      <option value="">Tous types</option>
+      <option>fire</option>
+      <option>smoke</option>
+    </select><select name="severity" class="field">
+      <option value="">Toutes sévérités</option>
+      @foreach (['low', 'medium', 'high', 'critical'] as $v)
+        <option>{{ $v }}</option>
+      @endforeach
+    </select>
+    <select name="status" class="field">
+      <option value="">Tous statuts</option>
+      @foreach (['detected', 'confirmed', 'false_alarm', 'resolved'] as $v)
+        <option>{{ $v }}</option>
+      @endforeach
+    </select>
+    <button class="btn-primary">Appliquer</button>
+  </form>
+  <div class="panel overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="p-4">Date</th>
+          <th class="p-4">Caméra</th>
+          <th class="p-4">Zone</th>
+          <th class="p-4">Type</th>
+          <th class="p-4">Sévérité</th>
+          <th class="p-4">Statut</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        @forelse($events as $e)
+          <tr>
+            <td class="p-4">{{ $e->detected_at->format('d/m/Y H:i') }}</td>
+            <td class="p-4">{{ $e->camera?->name }}</td>
+            <td class="p-4">{{ $e->zone?->name }}</td>
+            <td class="p-4">{{ $e->type->value }}</td>
+            <td class="p-4">{{ $e->severity->value }}</td>
+            <td class="p-4">{{ $e->status->value }}</td>
+        </tr>@empty<tr>
+            <td colspan="6"><x-ui.empty-state title="Aucun evenement"
+                description="Aucune donnee ne correspond aux criteres du rapport." icon="▥" /></td>
+          </tr>
+        @endforelse
+      </tbody>
+    </table>
+    <div class="border-t p-4">{{ $events->links() }}</div>
+  </div>
+@endsection

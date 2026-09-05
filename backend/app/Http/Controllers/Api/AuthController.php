@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Auth\IssueApiToken;
 use App\Actions\Auth\RegisterUser;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\FactoryResource;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
@@ -26,7 +27,7 @@ class AuthController extends Controller
         [$user, $factory] = $register->execute($request->validated());
         $user->load('factories');
 
-        return response()->json(['data' => new UserResource($user), 'factory_id' => $factory->id, 'token' => $tokens->execute($user, 'registration'), 'token_type' => 'Bearer'], 201);
+        return response()->json(['data' => new UserResource($user), 'factory' => new FactoryResource($factory), 'factory_id' => $factory->id, 'token' => $tokens->execute($user, 'registration'), 'token_type' => 'Bearer'], 201);
     }
 
     public function login(LoginRequest $request, IssueApiToken $tokens): JsonResponse
